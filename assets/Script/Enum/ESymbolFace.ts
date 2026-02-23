@@ -1,0 +1,15 @@
+export enum ESymbolFace {
+    TEN = 0,
+    JACK = 1,
+    QUEEN = 2,
+    KING = 3,
+    ACE = 4,
+    COIN = 5,
+    GOLDEN_TOAD = 6,
+    GOLD_INGOT = 7,
+    GOLD_POT = 8,
+    LUCKY_FISH = 9,
+    RED_ENVELOPE = 10,
+    WILD = 11,
+    SCRATCH = 12,
+}

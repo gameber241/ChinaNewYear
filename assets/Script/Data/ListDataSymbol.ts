@@ -1,0 +1,18 @@
+import { _decorator, Component, Node } from 'cc';
+import { dataSymbol } from './dataSymbol';
+import { ESymbolFace } from '../Enum/ESymbolFace';
+const { ccclass, property } = _decorator;
+
+@ccclass('ListDataSymbol')
+export class ListDataSymbol extends Component {
+    @property([dataSymbol])
+    listData: dataSymbol[] = []
+
+
+    public getDataByType(type: ESymbolFace) {
+        const x = this.listData.find(e => e.face === type);
+        return x;
+    }
+}
+
+
