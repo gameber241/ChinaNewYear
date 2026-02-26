@@ -1,16 +1,32 @@
-import { _decorator, Component, UITransform, Vec3, Tween, tween, instantiate, Node, sp } from 'cc';
+import {
+    _decorator,
+    Component,
+    UITransform,
+    Vec3,
+    Tween,
+    tween,
+    instantiate,
+    Node,
+    sp
+} from 'cc';
+
 import { Symbol } from './Symbol';
 import { PrefabManager } from './PrefabManager';
+import { GameManager } from './GameManager';
 
 const { ccclass, property } = _decorator;
 
 @ccclass('ReelBase')
 export abstract class ReelBase extends Component {
+
     @property(Node)
-    maskEff: Node = null
+    maskEff: Node = null!;
+
     @property(sp.Skeleton)
-    spinesEff: sp.Skeleton = null
+    spinesEff: sp.Skeleton = null!;
+
     protected symbolPadding = 1.5;
+
     public symbols: Symbol[] = [];
 
     protected cellSize = 0;
@@ -18,16 +34,21 @@ export abstract class ReelBase extends Component {
     protected halfSize = 0;
 
     protected _delay = 0.03;
+
     protected _isStopping = false;
+
     protected _remainSteps = 0;
 
+    private _isFastStop = false;
+
     @property(Number)
-    possitionReel: number = 0
+    possitionReel = 0;
 
     isRolling = false;
 
     @property(Number)
-    numberSymbols: number = 9; // dọc = 9, ngang = 8
+    numberSymbols = 9;
+
     private _onFullyStopped: (() => void) | null = null;
 
     public setOnFullyStopped(cb: () => void) {
@@ -35,19 +56,30 @@ export abstract class ReelBase extends Component {
     }
 
     public abstract VISIBLE_COUNT: number;
+
     public abstract FIRST_VISIBLE: number;
 
+    /* ================= INIT ================= */
+
     protected start(): void {
+
         this.init();
+
         this.collectSymbols();
+
         this.rearrangeSymbols();
     }
 
     init() {
-        for (let i = 0; i < this.numberSymbols; i++) {
-            let symbol = instantiate(PrefabManager.instance.symbolPrefab);
-            this.node.addChild(symbol);
 
+        for (let i = 0; i < this.numberSymbols; i++) {
+
+            const symbol =
+                instantiate(
+                    PrefabManager.instance.symbolPrefab
+                );
+
+            this.node.addChild(symbol);
         }
     }
 
@@ -55,273 +87,198 @@ export abstract class ReelBase extends Component {
         this.symbols = [];
         for (let n of this.node.children) {
             const s = n.getComponent(Symbol);
-            if (s) {
-                s.reel = this;
-                s.reelIndex = this.symbols.length;
-                this.symbols.push(s);
-                s.ResetSymbol()
-            }
+            if (!s) continue;
+            s.reel = this;
+            s.reelIndex = this.symbols.length;
+            this.symbols.push(s);
+            s.ResetSymbol();
         }
 
-        const ui = this.symbols[0].node.getComponent(UITransform);
-        this.cellSize = this.getCellSize(ui) + this.symbolPadding;
-        this.totalSize = this.cellSize * this.symbols.length;
+        const ui =
+            this.symbols[0].node.getComponent(UITransform)!;
+        this.cellSize =
+            this.getCellSize(ui)
+            + this.symbolPadding;
+
+        this.totalSize =
+            this.cellSize
+            * this.symbols.length;
+
         this.computeHalfSize();
     }
 
     protected rearrangeSymbols() {
         for (let s of this.symbols) {
-            s.node.position = this.getSymbolPosition(s.reelIndex);
+            s.node.setPosition(
+                this.getSymbolPosition(
+                    s.reelIndex
+                )
+            );
         }
     }
 
-    // ================= QUAY =================
-    startRoll() {
-        this.isRolling = true;
-        this._isStopping = false;
-        this.symbols.forEach(e => {
-            e.isInit = false
-        })
-        Tween.stopAllByTarget(this.node);
+    /* ================= SPIN ================= */
 
+    // startRoll() {
+    //     this.isRolling = true;
+    //     this._isStopping = false;
+    //     this._isFastStop = false;
+    //     this.symbols.forEach(e => {
+    //         e.isInit = false;
+    //     });
+
+    //     Tween.stopAllByTarget(this.node);
+    //     tween(this.node)
+    //         .call(() => {
+    //             if (!this.isRolling) return;
+
+    //             for (let s of this.symbols) {
+
+    //                 s.reelIndex++;
+
+    //                 if (s.reelIndex >= this.symbols.length) {
+    //                     s.reelIndex = 0;
+    //                     if (!this._isStopping)
+    //                         s.ResetSymbol();
+    //                     s.node.setPosition(this.getSymbolPosition(-1));
+    //                 }
+
+    //                 s.rollToIndex(this._delay);
+    //             }
+    //             /* ===== STOP PHASE ===== */
+    //             if (!this._isStopping)
+    //                 return;
+    //             /* ===== FAST STOP ===== */
+    //             if (this._isFastStop) {
+    //                 this.isRolling = false;
+    //                 Tween.stopAllByTarget(this.node);
+    //                 tween(this.node)
+    //                     .delay(0.05)
+    //                     .call(() => {
+    //                         this.finishStop();
+    //                     })
+    //                     .start();
+
+    //                 return;
+    //             }
+    //             /* ===== NORMAL STOP ===== */
+    //             this._remainSteps--;
+
+    //             if (this._remainSteps <= 0) {
+
+    //                 this.finishStop();
+
+    //                 return;
+    //             }
+
+    //         })
+
+    //         .delay(this._delay)
+
+    //         .union()
+
+    //         .repeatForever()
+
+    //         .start();
+    // }
+    _isStartingRoll
+    startRoll() {
+        this._isStartingRoll = true;
+        this.isRolling = true;
+        this.collectSymbols();
+        this.rearrangeSymbols();
         tween(this.node)
             .call(() => {
-                if (!this.isRolling) return;
-                for (let s of this.symbols) {
-                    s.reelIndex++;
-                    if (s.reelIndex >= this.symbols.length) {
-                        s.reelIndex = 0;
-                        if (!this._isStopping) {
-                            s.ResetSymbol(); // random khi chưa stop
-                        }
-                        s.node.position = this.getSymbolPosition(-1);
-
-
+                if (this.isRolling === false) return;
+                for (let i = 0; i < this.symbols.length; i++) {
+                    this.symbols[i].reelIndex += 1;
+                    if (this.symbols[i].reelIndex == this.symbols.length) {
+                        this.symbols[i].reelIndex = 0;
+                        this.symbols[i].node.position = this.getSymbolPosition(-1);
                     }
-                    s.rollToIndex(0.05);
-                }
-                // ===== STOP PHASE =====
-                if (this._isStopping) {
-                    this._remainSteps--;
-                    if (this._remainSteps <= 0) {
-                        // SoundToggle.instance.PlayRoll()
-                        this.isRolling = false;
-                        Tween.stopAllByTarget(this.node);
-                        this.snapToFinalPosition();
-                        const visibleSymbols = this.symbols.filter(s =>
-                            this.isVisibleIndex(s.reelIndex)
-                        );
-                        if (visibleSymbols.length === 0) {
-                            this._onFullyStopped?.();
-                            this._onFullyStopped = null;
-                            return;
-                        }
-                        let completed = 0;
-                        this.playIdleFXVisible();
-                        visibleSymbols.forEach(s => {
-                            s.exploAnim(10, () => {
-                                completed++;
-                                if (completed === visibleSymbols.length) {
-                                    // 🔥 chỉ emit event ở đây
-                                    this._onFullyStopped?.();
-                                    this._onFullyStopped = null;
-                                }
-                            });
-                        });
-                        return;
+
+                    if (this._isStartingRoll) {
+                        this._delay = 1;
+                        this.symbols[i].rollToIndex(1, Symbol.MoveType.START);
+                    }
+                    else {
+                        this._delay = 0.05;
+                        this.symbols[i].rollToIndex(0.05, Symbol.MoveType.MOVING);
                     }
                 }
-            })
+            }, this)
             .delay(this._delay)
+            .call(() => {
+                this._isStartingRoll = false;
+                this.setSymbleSiblingIndex();
+            }, this)
             .union()
             .repeatForever()
             .start();
     }
 
-    private snapToFinalPosition() {
-        for (let s of this.symbols) {
-            const pos = this.getSymbolPosition(s.reelIndex);
-            s.node.setPosition(pos);
-        }
-        this.sortSibling();
-    }
-    private isVisibleIndex(index: number): boolean {
-        const total = this.symbols.length;
-        const start = this.FIRST_VISIBLE;
-        const end = (start + this.VISIBLE_COUNT) % total;
 
-        if (start < end) {
-            return index >= start && index < end;
-        } else {
-            return index >= start || index < end;
-        }
-    }
+    stopRoll(typeAndFaces: any = null, typeAndFacesAbove: any = null) {
+        Tween.stopAllByTarget(this.node);
 
-    protected playIdleFXVisible() {
-        for (let s of this.symbols) {
-            if (this.isVisibleIndex(s.reelIndex)) {
-                s.UpdateUI()
-            }
-        }
-    }
+        this.isRolling = false;
 
-    // ================= CHUẨN BỊ DỪNG KIỂU GAME GỐC =================
-    stopRoll(result: any[]) {
-        if (result) {
-            const total = this.symbols.length;
-            const visible = this.VISIBLE_COUNT;
-            const firstVisible = this.FIRST_VISIBLE;
-            const usedSymbols = new Set<any>();
-
-            for (let i = 0; i < visible; i++) {
-
-                if (!result[i]) continue;
-
-                let targetIndex = firstVisible + i;
-                if (targetIndex >= total) {
-                    targetIndex -= total;
+        if (!typeAndFaces) {
+            for (let i = 0; i < typeAndFaces.length; i++) {
+                const symbol = this.symbols.find(s => s.reelIndex === i + 3);
+                if (symbol && typeAndFaces[i]) {
+                    symbol.InitSymbol(typeAndFaces[i])
                 }
+            }
+        }
 
-                let placeIndex = targetIndex - visible;
-                while (placeIndex < 0) {
-                    placeIndex += total;
+        if (typeAndFacesAbove) {
+            for (let i = 0; i < typeAndFacesAbove.length; i++) {
+                const symbol = this.symbols.find(s => s.reelIndex === 2 - i);
+                if (symbol && typeAndFacesAbove[i]) {
+                    symbol.InitSymbol(typeAndFaces[i])
                 }
-
-                const s = this.symbols.find(sym => sym.reelIndex === placeIndex);
-                if (!s) continue;
-
-                const e = result[i];
-                s.InitSymbol(e);
-                usedSymbols.add(s);
-
-                // if (this.possitionReel == 0) {
-                //     GameManager.instance.symBolArray[5 - (i + 1)][0] = s
-                //     s.col = 5 - (i + 1)
-                //     s.row = 0
-                // }
-                // else {
-                //     s.col = this.possitionReel - 1
-                //     s.row = i + 1
-
-                //     // GameManager.instance.symBolArray[this.possitionReel - 1][i + 1] = s
-
-                // }
             }
-            this._isStopping = true;
-            this._remainSteps = visible;
+        }
+
+        for (let i = 0; i < this.symbols.length; i++) {
+            this.symbols[i].reelIndex += 1;
+            if (this.symbols[i].reelIndex == this.symbols.length) {
+                this.symbols[i].reelIndex = 0;
+                this.symbols[i].node.position = this.getSymbolPosition(-1);
+            } else {
+            }
+            this.symbols[i].rollToIndex(0.5, Symbol.MoveType.STOP);
         }
     }
 
-
-
-
-
-    public cascadeDrop(dataAbove: any[]) {
-        let space = 0
-        let max = 7
-        this.symbols = this.symbols.filter(item => item.node !== null);
-        let listSymbok = []
-        if (this.isHorizontal() == false) max = 8
-        for (let i = max; i >= 4; i--) {
-            let s = this.symbols.find(e => e.reelIndex == i)
-            if (s == undefined || s == null) {
-                space++
-            }
-            else {
-                if (space > 0) {
-                    s.reelIndex += space
-                    listSymbok.push(s)
-                    if (this.isHorizontal() == true) {
-                        s.col -= space
-                        // GameManager.instance.symBolArray[s.col][s.row]
-                    }
-                    else {
-                        console.log(s.col, space, this.possitionReel)
-                        s.row += space
-                        // GameManager.instance.symBolArray[s.col][s.row]
-                    }
-                }
-
-            }
-        }
-
-        console.log(this.possitionReel, space, dataAbove)
-        for (let i = space - 1; i >= 0; i--) {
-            let Symbol = this.createNewSymbol()
-            this.symbols.push(Symbol)
-            Symbol.reelIndex = 4 + i
-            Symbol.node.setPosition(this.getSymbolPosition(4 - (space - i)))
-            Symbol.reel = this
-            Symbol.InitSymbol(dataAbove[i]);
-            listSymbok.push(Symbol)
-            if (this.isHorizontal() == true) {
-                Symbol.row = 4 - i
-                // GameManager.instance.symBolArray[Symbol.col][Symbol.row]
-            }
-            else {
-                Symbol.col = 1 + i
-                // GameManager.instance.symBolArray[Symbol.col][Symbol.row]
-            }
-        }
-
-        listSymbok.forEach((e, i) => {
-            this.scheduleOnce(() => {
-                e.DropToindex(0.1)
-            }, 0.05 * i)
-
-        })
-
-    }
-
-    private createNewSymbol(): Symbol {
-        let symbol = instantiate(PrefabManager.instance.symbolPrefab);
-        this.node.addChild(symbol);
-
-        return symbol.getComponent(Symbol);
-    }
-
-
-
-    public isHorizontal(): boolean { return false; }
-
-    public abstract getCellSize(ui: UITransform): number;
-    public abstract computeHalfSize(): void;
-    public abstract getSymbolPosition(index: number): Vec3;
-    public abstract sortSibling(): void;
-
-    protected playMoveFX() {
-        for (let s of this.symbols) {
-            s.fxMove();
-        }
-    }
-
-
-    protected playExplodeFX(onComplete?: () => void) {
-
-        const visibleSymbols = this.symbols.filter(s =>
-            this.isVisibleIndex(s.reelIndex)
-        );
-
-        if (visibleSymbols.length === 0) {
-            onComplete && onComplete();
-            return;
-        }
-
-        let completed = 0;
-
-        visibleSymbols.forEach(s => {
-            s.exploAnim(10, () => {
-                completed++;
-
-                if (completed === visibleSymbols.length) {
-                    onComplete && onComplete();
-                }
-            });
+    /* ================= FINISH STOP ================= */
+    setSymbleSiblingIndex() {
+        const allSymbols: Symbol[] = [...this.symbols];
+        allSymbols.sort((a, b) => {
+            return b.node.position.y - a.node.position.y;
         });
+
+        for (let i = 0; i < allSymbols.length; i++) {
+            allSymbols[i].node.setSiblingIndex(i);
+        }
     }
 
-    protected update(dt: number): void {
-        // this.maskEff.setSiblingIndex(999)
+    /* ================= ABSTRACT ================= */
+
+    public isHorizontal(): boolean {
+        return false;
     }
 
+    public abstract getCellSize(
+        ui: UITransform
+    ): number;
+
+    public abstract computeHalfSize(): void;
+
+    public abstract getSymbolPosition(
+        index: number
+    ): Vec3;
+
+    public abstract sortSibling(): void;
 }

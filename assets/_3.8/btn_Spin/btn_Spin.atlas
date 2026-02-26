@@ -1,0 +1,194 @@
+
+btn_Spin.png
+size: 1164,1088
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+Layer 3
+  rotate: false
+  xy: 234, 966
+  size: 118, 118
+  orig: 118, 118
+  offset: 0, 0
+  index: -1
+Layer 4
+  rotate: false
+  xy: 46, 995
+  size: 89, 89
+  orig: 89, 89
+  offset: 0, 0
+  index: -1
+VFX_explo2/VFX_explo2_0000_0
+  rotate: false
+  xy: 500, 815
+  size: 330, 269
+  orig: 330, 269
+  offset: 0, 0
+  index: -1
+VFX_explo2/VFX_explo2_0001_0
+  rotate: false
+  xy: 832, 815
+  size: 330, 269
+  orig: 330, 269
+  offset: 0, 0
+  index: -1
+VFX_explo2/VFX_explo2_0002_0
+  rotate: false
+  xy: 2, 695
+  size: 330, 269
+  orig: 330, 269
+  offset: 0, 0
+  index: -1
+VFX_explo2/VFX_explo2_0003_0
+  rotate: false
+  xy: 334, 544
+  size: 330, 269
+  orig: 330, 269
+  offset: 0, 0
+  index: -1
+VFX_explo2/VFX_explo2_0004_0
+  rotate: false
+  xy: 666, 544
+  size: 330, 269
+  orig: 330, 269
+  offset: 0, 0
+  index: -1
+VFX_explo2/VFX_explo2_0005_0
+  rotate: false
+  xy: 2, 424
+  size: 330, 269
+  orig: 330, 269
+  offset: 0, 0
+  index: -1
+VFX_explo2/VFX_explo2_0006_0
+  rotate: false
+  xy: 334, 273
+  size: 330, 269
+  orig: 330, 269
+  offset: 0, 0
+  index: -1
+VFX_explo2/VFX_explo2_0007_0
+  rotate: false
+  xy: 666, 273
+  size: 330, 269
+  orig: 330, 269
+  offset: 0, 0
+  index: -1
+VFX_explo2/VFX_explo2_0008_0
+  rotate: false
+  xy: 2, 153
+  size: 330, 269
+  orig: 330, 269
+  offset: 0, 0
+  index: -1
+VFX_explo2/VFX_explo2_0009_0
+  rotate: false
+  xy: 334, 2
+  size: 330, 269
+  orig: 330, 269
+  offset: 0, 0
+  index: -1
+VFX_explo2/VFX_explo2_0010_0
+  rotate: false
+  xy: 666, 2
+  size: 330, 269
+  orig: 330, 269
+  offset: 0, 0
+  index: -1
+light_dot3
+  rotate: false
+  xy: 2, 1042
+  size: 42, 42
+  orig: 42, 42
+  offset: 0, 0
+  index: -1
+vfx_light2
+  rotate: false
+  xy: 137, 989
+  size: 95, 95
+  orig: 95, 95
+  offset: 0, 0
+  index: -1
+vfx_light3
+  rotate: false
+  xy: 354, 941
+  size: 144, 143
+  orig: 144, 143
+  offset: 0, 0
+  index: -1
+
+btn_Spin2.png
+size: 1088,940
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+VFX_explo2/VFX_explo2_0011_0
+  rotate: true
+  xy: 2, 605
+  size: 330, 269
+  orig: 330, 269
+  offset: 0, 0
+  index: -1
+VFX_explo2/VFX_explo2_0012_0
+  rotate: true
+  xy: 2, 273
+  size: 330, 269
+  orig: 330, 269
+  offset: 0, 0
+  index: -1
+VFX_explo2/VFX_explo2_0013_0
+  rotate: false
+  xy: 2, 2
+  size: 330, 269
+  orig: 330, 269
+  offset: 0, 0
+  index: -1
+VFX_explo2/VFX_explo2_0014_0
+  rotate: true
+  xy: 273, 605
+  size: 330, 269
+  orig: 330, 269
+  offset: 0, 0
+  index: -1
+VFX_explo2/VFX_explo2_0015_0
+  rotate: true
+  xy: 273, 273
+  size: 330, 269
+  orig: 330, 269
+  offset: 0, 0
+  index: -1
+VFX_explo2/VFX_explo2_0016_0
+  rotate: false
+  xy: 334, 2
+  size: 330, 269
+  orig: 330, 269
+  offset: 0, 0
+  index: -1
+VFX_explo2/VFX_explo2_0017_0
+  rotate: false
+  xy: 666, 666
+  size: 330, 269
+  orig: 330, 269
+  offset: 0, 0
+  index: -1
+VFX_explo2/VFX_explo2_0018_0
+  rotate: true
+  xy: 544, 334
+  size: 330, 269
+  orig: 330, 269
+  offset: 0, 0
+  index: -1
+VFX_explo2/VFX_explo2_0019_0
+  rotate: true
+  xy: 815, 334
+  size: 330, 269
+  orig: 330, 269
+  offset: 0, 0
+  index: -1
+vfx_light1
+  rotate: true
+  xy: 666, 30
+  size: 302, 284
+  orig: 302, 284
+  offset: 0, 0
+  index: -1
