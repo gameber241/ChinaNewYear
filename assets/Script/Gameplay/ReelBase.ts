@@ -33,7 +33,7 @@ export abstract class ReelBase extends Component {
     protected totalSize = 0;
     protected halfSize = 0;
 
-    protected _delay = 0.03;
+    protected _delay = 0.04;
 
     protected _isStopping = false;
 
@@ -94,16 +94,9 @@ export abstract class ReelBase extends Component {
             s.ResetSymbol();
         }
 
-        const ui =
-            this.symbols[0].node.getComponent(UITransform)!;
-        this.cellSize =
-            this.getCellSize(ui)
-            + this.symbolPadding;
-
-        this.totalSize =
-            this.cellSize
-            * this.symbols.length;
-
+        const ui = this.symbols[0].node.getComponent(UITransform)!;
+        this.cellSize = this.getCellSize(ui) + this.symbolPadding;
+        this.totalSize = this.cellSize * this.symbols.length;
         this.computeHalfSize();
     }
 
@@ -117,70 +110,6 @@ export abstract class ReelBase extends Component {
         }
     }
 
-    /* ================= SPIN ================= */
-
-    // startRoll() {
-    //     this.isRolling = true;
-    //     this._isStopping = false;
-    //     this._isFastStop = false;
-    //     this.symbols.forEach(e => {
-    //         e.isInit = false;
-    //     });
-
-    //     Tween.stopAllByTarget(this.node);
-    //     tween(this.node)
-    //         .call(() => {
-    //             if (!this.isRolling) return;
-
-    //             for (let s of this.symbols) {
-
-    //                 s.reelIndex++;
-
-    //                 if (s.reelIndex >= this.symbols.length) {
-    //                     s.reelIndex = 0;
-    //                     if (!this._isStopping)
-    //                         s.ResetSymbol();
-    //                     s.node.setPosition(this.getSymbolPosition(-1));
-    //                 }
-
-    //                 s.rollToIndex(this._delay);
-    //             }
-    //             /* ===== STOP PHASE ===== */
-    //             if (!this._isStopping)
-    //                 return;
-    //             /* ===== FAST STOP ===== */
-    //             if (this._isFastStop) {
-    //                 this.isRolling = false;
-    //                 Tween.stopAllByTarget(this.node);
-    //                 tween(this.node)
-    //                     .delay(0.05)
-    //                     .call(() => {
-    //                         this.finishStop();
-    //                     })
-    //                     .start();
-
-    //                 return;
-    //             }
-    //             /* ===== NORMAL STOP ===== */
-    //             this._remainSteps--;
-
-    //             if (this._remainSteps <= 0) {
-
-    //                 this.finishStop();
-
-    //                 return;
-    //             }
-
-    //         })
-
-    //         .delay(this._delay)
-
-    //         .union()
-
-    //         .repeatForever()
-
-    //         .start();
-    // }
     _isStartingRoll
     startRoll() {
         this._isStartingRoll = true;
@@ -190,22 +119,18 @@ export abstract class ReelBase extends Component {
         tween(this.node)
             .call(() => {
                 if (this.isRolling === false) return;
-                for (let i = 0; i < this.symbols.length; i++) {
-                    this.symbols[i].reelIndex += 1;
-                    if (this.symbols[i].reelIndex == this.symbols.length) {
-                        this.symbols[i].reelIndex = 0;
-                        this.symbols[i].node.position = this.getSymbolPosition(-1);
+                for (let s of this.symbols) {
+                    s.reelIndex += 1
+                    if (s.reelIndex >= this.symbols.length) {
+                        s.reelIndex = 0;
+                        if (!this._isStopping) {
+                            s.ResetSymbol();
+                        }
+                        s.node.position = this.getSymbolPosition(-1);
                     }
-
-                    if (this._isStartingRoll) {
-                        this._delay = 1;
-                        this.symbols[i].rollToIndex(1, Symbol.MoveType.START);
-                    }
-                    else {
-                        this._delay = 0.05;
-                        this.symbols[i].rollToIndex(0.05, Symbol.MoveType.MOVING);
-                    }
+                    s.rollToIndex(this._delay, Symbol.MoveType.MOVING);
                 }
+
             }, this)
             .delay(this._delay)
             .call(() => {
@@ -218,40 +143,52 @@ export abstract class ReelBase extends Component {
     }
 
 
-    stopRoll(typeAndFaces: any = null, typeAndFacesAbove: any = null) {
-        Tween.stopAllByTarget(this.node);
+    stopRoll(result: any[]) {
+        this.isRolling = false
+        if (result) {
+            const total = this.symbols.length;
+            const visible = this.VISIBLE_COUNT;
+            const firstVisible = this.FIRST_VISIBLE;
+            const usedSymbols = new Set<any>();
 
-        this.isRolling = false;
+            for (let i = 0; i < visible; i++) {
 
-        if (!typeAndFaces) {
-            for (let i = 0; i < typeAndFaces.length; i++) {
-                const symbol = this.symbols.find(s => s.reelIndex === i + 3);
-                if (symbol && typeAndFaces[i]) {
-                    symbol.InitSymbol(typeAndFaces[i])
+                if (!result[i]) continue;
+                console.log()
+                let targetIndex = firstVisible + i;
+                if (targetIndex >= total) {
+                    targetIndex -= total;
                 }
-            }
-        }
 
-        if (typeAndFacesAbove) {
-            for (let i = 0; i < typeAndFacesAbove.length; i++) {
-                const symbol = this.symbols.find(s => s.reelIndex === 2 - i);
-                if (symbol && typeAndFacesAbove[i]) {
-                    symbol.InitSymbol(typeAndFaces[i])
+                let placeIndex = targetIndex - visible;
+                while (placeIndex < 0) {
+                    placeIndex += total;
                 }
+
+                const s = this.symbols.find(sym => sym.reelIndex === placeIndex);
+                if (!s) continue;
+
+                const e = result[i];
+                s.InitSymbol(e);
+
+                usedSymbols.add(s);
             }
+
+            this.symbols.forEach((e) => {
+
+                e.reelIndex =
+                    (e.reelIndex + visible) % total;
+
+            })
+
+            this.symbols.forEach((e, index) => {
+                e.rollToIndex(0.2, Symbol.MoveType.STOP)
+            })
         }
 
-        for (let i = 0; i < this.symbols.length; i++) {
-            this.symbols[i].reelIndex += 1;
-            if (this.symbols[i].reelIndex == this.symbols.length) {
-                this.symbols[i].reelIndex = 0;
-                this.symbols[i].node.position = this.getSymbolPosition(-1);
-            } else {
-            }
-            this.symbols[i].rollToIndex(0.5, Symbol.MoveType.STOP);
-        }
+
+
     }
-
     /* ================= FINISH STOP ================= */
     setSymbleSiblingIndex() {
         const allSymbols: Symbol[] = [...this.symbols];

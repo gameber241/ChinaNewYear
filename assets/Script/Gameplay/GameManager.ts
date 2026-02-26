@@ -43,6 +43,7 @@ export class GameManager extends Component {
     symBolArray: Symbol[][] = [];
 
     indexCurrentReel = 0;
+    turboMode: boolean = false
 
     onLoad() { GameManager.instance = this; }
 
@@ -74,10 +75,7 @@ export class GameManager extends Component {
         //     ? (this.SetFreeSpines(), this.PlayFreeSpin(round.freeSpin))
         //     : this.SetNormal();
 
-        if (sampleJson.rounds.length <= this.indexCurrentReel) return;
-
-        round.grid[0].reverse();
-
+        if (sampleJson.rounds.length <= this.indexCurrentReel) return
         this.GenerateMap(round.grid);
 
         // ComboManager.instance.ScrollToCombo(round.multiplier);
@@ -184,18 +182,20 @@ export class GameManager extends Component {
     }
 
     /* ================= NORMAL ================= */
+    async RollDataNormal(grid) {
+        for (let i = 0; i < this.reels.length; i++) {
+            let current = i;
+            this.reels[current].startRoll();
+            await GameManager.waitForSeconds(this.turboMode ? 0 : 0.125);
+        }
 
-    RollDataNormal(grid) {
-        let stopped = 0;
-        this.reels.forEach((reel, index) => {
-            reel.setOnFullyStopped(() => {
-                if (++stopped === this.reels.length)
-                    this.ClearData();
-            });
+        await GameManager.waitForSeconds(this.turboMode ? 0.25 : 0.75);
+        for (let i = 0; i < this.reels.length; i++) {
+            let current = i;
+            this.reels[current].stopRoll(grid[i]);
+            await GameManager.waitForSeconds(this.turboMode ? 0 : 0.125);
+        }
 
-            reel.startRoll();
-            this.scheduleOnce(() => reel.stopRoll(grid[index], false), 1 + 0.1 * index);
-        });
     }
 
     StopRollAllReel() { this.ClearData(); }
@@ -309,20 +309,20 @@ export class GameManager extends Component {
             return;
         }
 
-        if (r.totalPrice && r.isScratch) {
+        // if (r.totalPrice && r.isScratch) {
 
-            // SoundToggle.instance.playTotalWin();
+        //     // SoundToggle.instance.playTotalWin();
 
-            // FreeSpines.instance.ShowTotalSpin(() => {
+        //     // FreeSpines.instance.ShowTotalSpin(() => {
 
-            //     SoundToggle.instance.stopTotalWIn();
+        //     //     SoundToggle.instance.stopTotalWIn();
 
-            //     next();
+        //     //     next();
 
-            // }, 4000);
+        //     // }, 4000);
 
-            return;
-        }
+        //     return;
+        // }
 
         next();
     }

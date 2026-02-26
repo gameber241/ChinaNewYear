@@ -90,7 +90,7 @@
     "_lpos": {
       "__type__": "cc.Vec3",
       "x": 0,
-      "y": 0,
+      "y": -42,
       "z": 0
     },
     "_lrot": {
@@ -171,7 +171,7 @@
       "__expectedType__": "sp.SkeletonData"
     },
     "defaultSkin": "Icon1",
-    "defaultAnimation": "icon_size2_action",
+    "defaultAnimation": "icon_size2_idle",
     "_premultipliedAlpha": false,
     "_timeScale": 1,
     "_preCacheMode": 0,
@@ -198,8 +198,6 @@
       "__id__": 0
     },
     "fileId": "59JjPr3LdERZcpooX3S0Nf",
-    "instance": null,
-    "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
   },
   {
@@ -288,7 +286,7 @@
     "node": {
       "__id__": 8
     },
-    "_enabled": true,
+    "_enabled": false,
     "__prefab": {
       "__id__": 12
     },
@@ -352,8 +350,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 86,
-      "height": 86
+      "width": 84,
+      "height": 84
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -386,7 +384,6 @@
     "frame": {
       "__id__": 11
     },
-    "reelIndex": 0,
     "_id": ""
   },
   {
@@ -402,7 +399,6 @@
       "__id__": 0
     },
     "fileId": "f42gr8i2ZDjoAw07stH8ne",
-    "instance": null,
-    "targetOverrides": null
+    "instance": null
   }
 ]

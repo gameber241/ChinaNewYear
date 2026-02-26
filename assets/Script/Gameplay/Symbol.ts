@@ -22,7 +22,7 @@ const SymbolAnim = {
         win: ["", ""]
     },
     DEFAULT: {
-        idle: ["icon_size1_idle", "icon_size1_idle", "icon_size1_idle"],
+        idle: ["icon_size1_idle", "icon_size2_idle", "icon_size3_idle"],
         move: ["icon_size1_move", "icon_size2_move", "icon_size3_move"],
         action: ["", "", ""],
         win: ["icon_size1_action", "icon_size2_action", "icon_size3_action"]
@@ -44,7 +44,7 @@ export class Symbol extends Component {
     @property(sp.Skeleton) frame: sp.Skeleton = null!;
 
     reel: ReelBase = null!;
-    @property(Number) reelIndex = 0;
+    reelIndex = 0;
 
     stackId = -1; stackSize = 1; stackIndex = 0;
     col = 0; row = 0; layer = 0;
@@ -125,6 +125,8 @@ export class Symbol extends Component {
     SetUISymbolNormal() {
         this.UpdateFrame();
         this.playiconAnimation(this.getNameIdle(), true);
+        this.icon.node.setPosition(0, -86 * this.stackSize / 2 + 86 / 2, 0)
+
     }
 
     SetUiMove() {
@@ -168,6 +170,7 @@ export class Symbol extends Component {
     }
     rollToIndex(time: number = 0.2, type: string = Symbol.MoveType.MOVING) {
         const newPosition = this.reel.getSymbolPosition(this.reelIndex);
+        // console.log(newPosition)
         Tween.stopAllByTarget(this.node);
 
         if (type === Symbol.MoveType.MOVING)
