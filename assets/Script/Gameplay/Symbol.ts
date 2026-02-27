@@ -1,4 +1,4 @@
-import { _decorator, Component, Enum, sp, tween, Tween } from 'cc';
+import { _decorator, Component, Enum, Layers, sp, tween, Tween } from 'cc';
 import { ESymbolFace } from '../Enum/ESymbolFace';
 import { SymbolFrameState } from '../Enum/ESymbolFrameState';
 import { SymbolCell } from './SymbolCell';
@@ -26,6 +26,10 @@ const SymbolAnim = {
         move: ["icon_size1_move", "icon_size2_move", "icon_size3_move"],
         action: ["", "", ""],
         win: ["icon_size1_action", "icon_size2_action", "icon_size3_action"]
+    },
+    FRAME: {
+        idle: ["icon_size1_idle", "icon_size2_idle", "icon_size3_idle"],
+        move: ["icon_size1_move", "icon_size2_move", "icon_size3_move"],
     }
 };
 
@@ -66,7 +70,10 @@ export class Symbol extends Component {
         [ESymbolFace.GOLDEN_TOAD]: "Icon11"
     };
 
-    protected start() { this.layer = this.icon.node.layer; }
+    protected start() {
+        this.layer = this.icon.node.layer
+        this.icon.node.layer = Layers.Enum.DEFAULT
+    }
 
     private getAnim(type: "idle" | "move" | "action" | "win"): string {
 
@@ -125,7 +132,10 @@ export class Symbol extends Component {
     SetUISymbolNormal() {
         this.UpdateFrame();
         this.playiconAnimation(this.getNameIdle(), true);
+        this.playFrameAnimation(this.getNameIdle(), true)
         this.icon.node.setPosition(0, -86 * this.stackSize / 2 + 86 / 2, 0)
+        this.frame.node.setPosition(0, -86 * this.stackSize / 2 + 86 / 2, 0)
+
 
     }
 
@@ -176,8 +186,8 @@ export class Symbol extends Component {
         if (type === Symbol.MoveType.MOVING)
             this.SetUiMove();
         else {
-
-            this.playiconAnimation(this.getNameIdle(), false);
+            this.playiconAnimation(this.getNameIdle(), true);
+            this.playFrameAnimation(this.getNameIdle(), true);
         }
 
         if (this.reelIndex === 1)
@@ -191,61 +201,40 @@ export class Symbol extends Component {
 
         return tween(this.node)
             .to(time, { position: newPosition }, { easing: ease[type] })
+            .call(() => {
+                if (type == Symbol.MoveType.STOP) {
+                    this.exploAnim()
+                }
+            })
             .start();
 
     }
-    // rollToIndex(time = 0.2) {
-
-    //     if (!this.reel) return;
-
-    //     this.SetUiMove();
-
-    //     const pos = this.reel.getSymbolPosition(this.reelIndex);
-    //     Tween.stopAllByTarget(this.node);
-    //     tween(this.node).to(time, { position: pos }).start();
-    // }
 
     DropToindex(time = 0.2) {
-
         if (!this.reel) return;
-
         const pos = this.reel.getSymbolPosition(this.reelIndex);
-
         Tween.stopAllByTarget(this.node);
 
         tween(this.node)
             .to(time, { position: pos })
-            .call(() => this.exploAnim(20))
+            .call(() => this.exploAnim())
             .start();
     }
 
-    exploAnim(bounce = 10, onComplete?: () => void) {
+    exploAnim(onComplete?: () => void) {
 
-        if (!this.isRoot || !this.reel) { onComplete?.(); return; }
+        if (this.face == ESymbolFace.SCRATCH || this.face == ESymbolFace.WILD) {
+            this.icon.node.layer = this.layer
+        }
+        const action = this.getNameAction();
+        const idle = this.getNameIdle();
 
-        const base = this.reel.getSymbolPosition(this.reelIndex);
+        if (!action || !idle) { onComplete?.(); return; }
 
-        const up = this.reel.isHorizontal()
-            ? base.clone().add3f(bounce, 0, 0)
-            : base.clone().add3f(0, bounce, 0);
-
-        tween(this.node)
-            .set({ position: base })
-            .to(0.08, { position: up }, { easing: 'sineOut' })
-            .to(0.08, { position: base }, { easing: 'sineIn' })
-            .call(() => {
-
-                const action = this.getNameAction();
-                const idle = this.getNameIdle();
-
-                if (!action || !idle) { onComplete?.(); return; }
-
-                this.playiconAnimation(action, false);
-                this.addAnimation(idle, true);
-
-                onComplete?.();
-            })
-            .start();
+        this.playiconAnimation(action, false);
+        this.addAnimation(idle, true);
+        this.playFrameAnimation(idle, true)
+        onComplete?.();
     }
 
     FlipSymbol(data, onComplete?: () => void) {

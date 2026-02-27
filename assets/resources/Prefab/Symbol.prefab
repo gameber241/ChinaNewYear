@@ -107,7 +107,7 @@
       "z": 1
     },
     "_mobility": 0,
-    "_layer": 33554432,
+    "_layer": 1,
     "_euler": {
       "__type__": "cc.Vec3",
       "x": 0,
@@ -198,6 +198,8 @@
       "__id__": 0
     },
     "fileId": "59JjPr3LdERZcpooX3S0Nf",
+    "instance": null,
+    "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
   },
   {
@@ -399,6 +401,7 @@
       "__id__": 0
     },
     "fileId": "f42gr8i2ZDjoAw07stH8ne",
-    "instance": null
+    "instance": null,
+    "targetOverrides": null
   }
 ]

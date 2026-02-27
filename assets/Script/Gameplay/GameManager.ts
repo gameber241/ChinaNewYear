@@ -61,7 +61,7 @@ export class GameManager extends Component {
 
     initGrid() {
         this.symBolArray = Array.from({ length: 6 },
-            () => Array.from({ length: 6 }, () => null)
+            () => Array.from({ length: 5 }, () => null)
         );
     }
 
@@ -186,15 +186,18 @@ export class GameManager extends Component {
         for (let i = 0; i < this.reels.length; i++) {
             let current = i;
             this.reels[current].startRoll();
-            await GameManager.waitForSeconds(this.turboMode ? 0 : 0.125);
         }
 
         await GameManager.waitForSeconds(this.turboMode ? 0.25 : 0.75);
         for (let i = 0; i < this.reels.length; i++) {
             let current = i;
             this.reels[current].stopRoll(grid[i]);
-            await GameManager.waitForSeconds(this.turboMode ? 0 : 0.125);
+            await GameManager.waitForSeconds(this.turboMode ? 0 : 0.3);
         }
+
+        await GameManager.waitForSeconds(0.5);
+        this.ClearData()
+
 
     }
 
@@ -202,40 +205,26 @@ export class GameManager extends Component {
 
     /* ================= CLEAR ================= */
 
-    ClearData() {
-
+    async ClearData() {
         const r = sampleJson.rounds[this.indexCurrentReel];
-
         // SoundToggle.instance.PlaySymbolWin();
-
-        // r.win.positions.forEach(e =>
-        //     this.symBolArray[e.c][e.r].Dispose()
-        // );
-
-        // this.scheduleOnce(() => {
-
-        //     const drop = () => {
-
-        //         // SoundToggle.instance.PlaySymbolDrop();
-
-        //         this.reels.forEach(
-        //             (reel, i) =>
-        //                 reel.cascadeDrop(r.above[i])
-        //         );
-
-        //         this.scheduleOnce(
-        //             () => this.ShowBigWin(),
-        //             2
-        //         );
-        //     };
-
-        //     if (r.flips.length) {
-
-        //         this.FlipData(drop);
-
-        //     } else drop();
-
-        // }, 1.3);
+        r.win.positions.forEach(e =>
+            this.symBolArray[e.c][e.r].Dispose()
+        );
+        if (r.flips.length) {
+            this.FlipData()
+        }
+        await GameManager.waitForSeconds(1.3);
+        this.reels.forEach((reel, i) => reel.cascadeDrop(r.above[i]));
+        // SoundToggle.instance.PlaySymbolDrop();
+        await GameManager.waitForSeconds(2);
+        if (r.hasNext == true) {
+            this.indexCurrentReel++
+            this.ClearData()
+        }
+        else {
+            this.ShowBigWin()
+        }
     }
 
     /* ================= FLIP ================= */

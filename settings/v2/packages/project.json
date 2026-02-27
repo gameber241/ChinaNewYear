@@ -6,5 +6,11 @@
       "height": 960,
       "fitHeight": true
     }
-  }
+  },
+  "layer": [
+    {
+      "name": "scratch",
+      "value": 1
+    }
+  ]
 }

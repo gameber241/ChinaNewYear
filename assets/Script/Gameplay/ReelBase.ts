@@ -110,9 +110,7 @@ export abstract class ReelBase extends Component {
         }
     }
 
-    _isStartingRoll
     startRoll() {
-        this._isStartingRoll = true;
         this.isRolling = true;
         this.collectSymbols();
         this.rearrangeSymbols();
@@ -131,12 +129,12 @@ export abstract class ReelBase extends Component {
                     s.rollToIndex(this._delay, Symbol.MoveType.MOVING);
                 }
 
-            }, this)
+            })
             .delay(this._delay)
             .call(() => {
-                this._isStartingRoll = false;
+                console.log("call den day")
                 this.setSymbleSiblingIndex();
-            }, this)
+            })
             .union()
             .repeatForever()
             .start();
@@ -145,6 +143,7 @@ export abstract class ReelBase extends Component {
 
     stopRoll(result: any[]) {
         this.isRolling = false
+        Tween.stopAllByTarget(this.node);
         if (result) {
             const total = this.symbols.length;
             const visible = this.VISIBLE_COUNT;
@@ -172,13 +171,14 @@ export abstract class ReelBase extends Component {
                 s.InitSymbol(e);
 
                 usedSymbols.add(s);
+                s.col = this.possitionReel
+                s.row = i
+                GameManager.instance.symBolArray[this.possitionReel][i] = s
             }
-
+            console.log(GameManager.instance.symBolArray)
             this.symbols.forEach((e) => {
-
                 e.reelIndex =
                     (e.reelIndex + visible) % total;
-
             })
 
             this.symbols.forEach((e, index) => {
@@ -200,6 +200,55 @@ export abstract class ReelBase extends Component {
             allSymbols[i].node.setSiblingIndex(i);
         }
     }
+    public cascadeDrop(dataAbove: any[]) {
+        let space = 0
+        this.symbols = this.symbols.filter(item => item.node !== null);
+        let listSymbok: Symbol[] = []
+        for (let i = 6; i >= 2; i--) {
+            let s = this.symbols.find(e => e.reelIndex == i)
+            if (s == undefined || s == null) {
+                space++
+            }
+            else {
+                if (space > 0) {
+                    s.reelIndex += space
+                    listSymbok.push(s)
+                    GameManager.instance.symBolArray[s.col][s.row] = null;
+                    s.row += space
+                    GameManager.instance.symBolArray[s.col][s.row] = s;
+                }
+
+            }
+        }
+        for (let i = space - 1; i >= 0; i--) {
+            let Symbol = this.createNewSymbol()
+            this.symbols.push(Symbol)
+            Symbol.reelIndex = 2 + i
+            Symbol.node.setPosition(this.getSymbolPosition(2 - (space - i)))
+            Symbol.reel = this
+            Symbol.InitSymbol(dataAbove[i]);
+            listSymbok.push(Symbol)
+            Symbol.row = i
+            Symbol.col = this.possitionReel
+            GameManager.instance.symBolArray[Symbol.col][Symbol.row] = Symbol;
+            console.log
+        }
+
+        listSymbok.forEach((e, i) => {
+            this.scheduleOnce(() => {
+                e.rollToIndex(0.1, Symbol.MoveType.STOP)
+            }, 0.05 * i)
+
+        })
+    }
+
+    private createNewSymbol(): Symbol {
+        let symbol = instantiate(PrefabManager.instance.symbolPrefab);
+        this.node.addChild(symbol);
+
+        return symbol.getComponent(Symbol);
+    }
+
 
     /* ================= ABSTRACT ================= */
 

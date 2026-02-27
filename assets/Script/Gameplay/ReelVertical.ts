@@ -4,7 +4,6 @@ const { ccclass } = _decorator;
 
 @ccclass('ReelVertical')
 export class ReelVertical extends ReelBase {
-
     public VISIBLE_COUNT = 5;
     public FIRST_VISIBLE = 2
 
