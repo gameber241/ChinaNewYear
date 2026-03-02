@@ -1,4 +1,4 @@
-import { _decorator, Component, Enum, Layers, sp, tween, Tween } from 'cc';
+import { _decorator, Component, Enum, Layers, sp, tween, Tween, Vec3 } from 'cc';
 import { ESymbolFace } from '../Enum/ESymbolFace';
 import { SymbolFrameState } from '../Enum/ESymbolFrameState';
 import { SymbolCell } from './SymbolCell';
@@ -71,7 +71,8 @@ export class Symbol extends Component {
     };
 
     protected start() {
-        this.layer = this.icon.node.layer
+        // this.layer = this.icon.node.layer
+        this.layer = 1
         this.icon.node.layer = Layers.Enum.DEFAULT
     }
 
@@ -210,6 +211,7 @@ export class Symbol extends Component {
 
     }
 
+
     DropToindex(time = 0.2) {
         if (!this.reel) return;
         const pos = this.reel.getSymbolPosition(this.reelIndex);
@@ -258,12 +260,12 @@ export class Symbol extends Component {
     }
 
     Dispose() {
-
         this.playiconAnimation(this.getNameWin(), false);
-
         this.scheduleOnce(() => {
             this.node.destroy();
-        }, 1.2);
+        }, 1);
+
+
     }
 
     HideAll() { this.EnabledAniamtion(false); }
@@ -275,6 +277,15 @@ export class Symbol extends Component {
             : "Icon_Scatter_big_action_idle";
 
         this.playiconAnimation(name, true);
+    }
+
+
+    ChangeLayerWin() {
+        this.icon.node.layer = 2
+        if (this.face == ESymbolFace.SCRATCH || this.face == ESymbolFace.WILD) {
+            this.icon.node.layer = 3
+
+        }
     }
 
 }

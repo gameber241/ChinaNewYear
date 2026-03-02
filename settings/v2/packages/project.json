@@ -11,6 +11,22 @@
     {
       "name": "scratch",
       "value": 1
+    },
+    {
+      "name": "bigwin",
+      "value": 2
+    },
+    {
+      "name": "win",
+      "value": 4
+    },
+    {
+      "name": "scratch_win",
+      "value": 8
+    },
+    {
+      "name": "maskSymbolÏ",
+      "value": 16
     }
   ]
 }

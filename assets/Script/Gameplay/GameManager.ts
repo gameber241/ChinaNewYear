@@ -4,6 +4,7 @@ import { sampleJson } from './DataExample';
 import { ReelBase } from './ReelBase';
 import { ESymbolFace } from '../Enum/ESymbolFace';
 import { Symbol } from './Symbol';
+import { BigWin } from './Bigwin';
 
 const { ccclass, property } = _decorator;
 
@@ -26,6 +27,7 @@ export class GameManager extends Component {
     @property(Node) optionSetting: Node = null!;
     // @property(AutoCtrl) UiAuto: AutoCtrl = null!;
     @property(Node) history: Node = null!;
+    @property(Node) maskSymbol: Node = null
 
     public static instance: GameManager = null;
 
@@ -169,9 +171,7 @@ export class GameManager extends Component {
                 }
 
                 // SoundToggle.instance.PlayRollScatch();
-
                 this.playAnimReelScratch(current);
-
                 this.scheduleOnce(stopNext, time);
             });
 
@@ -187,43 +187,51 @@ export class GameManager extends Component {
             let current = i;
             this.reels[current].startRoll();
         }
-
         await GameManager.waitForSeconds(this.turboMode ? 0.25 : 0.75);
         for (let i = 0; i < this.reels.length; i++) {
             let current = i;
             this.reels[current].stopRoll(grid[i]);
             await GameManager.waitForSeconds(this.turboMode ? 0 : 0.3);
         }
-
         await GameManager.waitForSeconds(0.5);
         this.ClearData()
 
 
     }
 
-    StopRollAllReel() { this.ClearData(); }
-
     /* ================= CLEAR ================= */
 
     async ClearData() {
+        this.maskSymbol.active = true;
+        await GameManager.waitForSeconds(0.05);
+
         const r = sampleJson.rounds[this.indexCurrentReel];
-        // SoundToggle.instance.PlaySymbolWin();
-        r.win.positions.forEach(e =>
-            this.symBolArray[e.c][e.r].Dispose()
-        );
-        if (r.flips.length) {
-            this.FlipData()
+        // Win animation delay từng symbol
+        for (let i = 0; i < r.win.positions.length; i++) {
+            const e = r.win.positions[i];
+            this.symBolArray[e.c][e.r].ChangeLayerWin();
+            await GameManager.waitForSeconds(0.05);
         }
-        await GameManager.waitForSeconds(1.3);
+
+        // dispose sau khi animation xong
+        for (const e of r.win.positions) {
+            this.symBolArray[e.c][e.r].Dispose();
+        }
+
+        if (r.flips.length) {
+            await this.FlipData();
+        }
+
+        await GameManager.waitForSeconds(1.1);
         this.reels.forEach((reel, i) => reel.cascadeDrop(r.above[i]));
-        // SoundToggle.instance.PlaySymbolDrop();
-        await GameManager.waitForSeconds(2);
-        if (r.hasNext == true) {
-            this.indexCurrentReel++
-            this.ClearData()
+        await GameManager.waitForSeconds(1);
+        this.maskSymbol.active = false;
+        if (r.hasNext) {
+            this.indexCurrentReel++;
+            await this.ClearData(); // ⭐ cực quan trọng
         }
         else {
-            this.ShowBigWin()
+            this.ShowBigWin();
         }
     }
 
@@ -244,11 +252,8 @@ export class GameManager extends Component {
         // );
 
         flips.forEach(e => {
-
             this.symBolArray[e.from.c][e.from.r]
-
                 .FlipSymbol(e.to, () => {
-
                     if (++done === flips.length)
                         onComplete?.();
 
@@ -257,46 +262,45 @@ export class GameManager extends Component {
         });
     }
 
-    /* ================= BIGWIN ================= */
-
     ShowBigWin() {
-
         const r = sampleJson.rounds[this.indexCurrentReel];
-
         const next = () => this.CheckContinueSpin();
 
-        const superWin = () => {
-
-            if (!r.SuperWin) { next(); return; }
-
-            // SoundToggle.instance.playBigWin();
-
-            // BigWin.instance.showSuperWin(
-            //     next, r.SuperWin
-            // );
-        };
-
-        const megaWin = () => {
-
-            if (!r.MegaWin) { superWin(); return; }
-
-            // SoundToggle.instance.playBigWin();
-
-            // BigWin.instance.showMegaWin(
-            //     superWin, r.MegaWin
-            // );
-        };
+        // Tạo danh sách các win cần chạy theo đúng thứ tự
+        const winQueue: Array<() => void> = [];
 
         if (r.BigWin) {
+            winQueue.push(() => { BigWin.instance.showBigWin(runNext, r.BigWin) });
+        }
 
-            // SoundToggle.instance.playBigWin();
+        if (r.SuperWin) {
+            winQueue.push(() => { BigWin.instance.showSuperWin(runNext, r.SuperWin) });
+        }
 
-            // BigWin.instance.showBigWin(
-            //     megaWin, r.BigWin
-            // );
+        if (r.MegaWin) {
+            winQueue.push(() => { BigWin.instance.showMegaWin(runNext, r.MegaWin) });
+        }
 
+        // Nếu không có cái nào
+        if (winQueue.length === 0) {
+            next();
             return;
         }
+
+        let index = 0;
+
+        const runNext = () => {
+            if (index >= winQueue.length) {
+                next();
+                return;
+            }
+            const fn = winQueue[index];
+            index++;
+            fn();
+        };
+
+        runNext();
+
 
         // if (r.totalPrice && r.isScratch) {
 
@@ -312,8 +316,6 @@ export class GameManager extends Component {
 
         //     return;
         // }
-
-        next();
     }
 
     /* ================= FLOW ================= */
@@ -345,9 +347,7 @@ export class GameManager extends Component {
     /* ================= SCRATCH CHECK ================= */
 
     CheckScratch() {
-
         let count = 0;
-
         sampleJson.rounds[
             this.indexCurrentReel
         ].grid.forEach(r =>
@@ -356,7 +356,6 @@ export class GameManager extends Component {
                     count++;
             })
         );
-
         return count >= 3;
     }
 

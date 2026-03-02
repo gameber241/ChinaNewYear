@@ -132,7 +132,6 @@ export abstract class ReelBase extends Component {
             })
             .delay(this._delay)
             .call(() => {
-                console.log("call den day")
                 this.setSymbleSiblingIndex();
             })
             .union()
@@ -141,53 +140,106 @@ export abstract class ReelBase extends Component {
     }
 
 
+    // stopRoll(result: any[]) {
+    //     this.isRolling = false
+    //     Tween.stopAllByTarget(this.node);
+    //     if (result) {
+    //         const total = this.symbols.length;
+    //         const visible = this.VISIBLE_COUNT;
+    //         const firstVisible = this.FIRST_VISIBLE;
+    //         const usedSymbols = new Set<any>();
+
+    //         for (let i = 0; i < visible; i++) {
+
+    //             if (!result[i]) continue;
+    //             console.log()
+    //             let targetIndex = firstVisible + i;
+    //             if (targetIndex >= total) {
+    //                 targetIndex -= total;
+    //             }
+
+    //             let placeIndex = targetIndex - visible;
+    //             while (placeIndex < 0) {
+    //                 placeIndex += total;
+    //             }
+
+    //             const s = this.symbols.find(sym => sym.reelIndex === placeIndex);
+    //             if (!s) continue;
+
+    //             const e = result[i];
+    //             s.InitSymbol(e);
+
+    //             usedSymbols.add(s);
+    //             s.col = this.possitionReel
+    //             s.row = i
+    //             GameManager.instance.symBolArray[this.possitionReel][i] = s
+    //         }
+    //         console.log(GameManager.instance.symBolArray)
+    //         this.symbols.forEach((e) => {
+    //             e.reelIndex =
+    //                 (e.reelIndex + visible) % total;
+    //         })
+
+    //         this.symbols.forEach((e, index) => {
+    //             e.rollToIndex(0.5, Symbol.MoveType.STOP)
+    //         })
+    //     }
+
+
+    // }
     stopRoll(result: any[]) {
-        this.isRolling = false
+
         Tween.stopAllByTarget(this.node);
-        if (result) {
-            const total = this.symbols.length;
-            const visible = this.VISIBLE_COUNT;
-            const firstVisible = this.FIRST_VISIBLE;
-            const usedSymbols = new Set<any>();
 
-            for (let i = 0; i < visible; i++) {
+        this.isRolling = false;
 
-                if (!result[i]) continue;
-                console.log()
-                let targetIndex = firstVisible + i;
-                if (targetIndex >= total) {
-                    targetIndex -= total;
-                }
+        if (!result) return;
 
-                let placeIndex = targetIndex - visible;
-                while (placeIndex < 0) {
-                    placeIndex += total;
-                }
+        const visible = this.VISIBLE_COUNT;
+        const firstVisible = this.FIRST_VISIBLE;
+        const total = this.symbols.length;
 
-                const s = this.symbols.find(sym => sym.reelIndex === placeIndex);
-                if (!s) continue;
+        // ⭐ set result giống code bạn
+        for (let i = 0; i < visible; i++) {
 
-                const e = result[i];
-                s.InitSymbol(e);
+            if (!result[i]) continue;
 
-                usedSymbols.add(s);
-                s.col = this.possitionReel
-                s.row = i
-                GameManager.instance.symBolArray[this.possitionReel][i] = s
-            }
-            console.log(GameManager.instance.symBolArray)
-            this.symbols.forEach((e) => {
-                e.reelIndex =
-                    (e.reelIndex + visible) % total;
-            })
+            const symbol = this.symbols.find(
 
-            this.symbols.forEach((e, index) => {
-                e.rollToIndex(0.2, Symbol.MoveType.STOP)
-            })
+                s => s.reelIndex === firstVisible + i - 1
+
+            );
+
+            if (!symbol) continue;
+
+            symbol.InitSymbol(result[i]);
+
+            symbol.col = this.possitionReel;
+            symbol.row = i;
+
+            GameManager.instance.symBolArray[
+                this.possitionReel
+            ][i] = symbol;
         }
+        // ⭐ giống code 1 → luôn đi xuống
+        for (let i = 0; i < this.symbols.length; i++) {
 
+            this.symbols[i].reelIndex += 1;
 
+            if (this.symbols[i].reelIndex >= total) {
 
+                this.symbols[i].reelIndex = 0;
+
+                this.symbols[i].node.setPosition(
+                    this.getSymbolPosition(-1)
+                );
+            }
+
+            this.symbols[i].rollToIndex(
+                0.1,
+                Symbol.MoveType.STOP
+            );
+        }
     }
     /* ================= FINISH STOP ================= */
     setSymbleSiblingIndex() {

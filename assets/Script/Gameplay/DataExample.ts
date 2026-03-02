@@ -136,9 +136,9 @@ export const sampleJson = {
             stepWin: 2000
         },
 
-        BigWin: 0,
-        MegaWin: 0,
-        SuperWin: 0,
+        BigWin: 100,
+        MegaWin: 2000,
+        SuperWin: 8000,
         flips: [],
         copies: [],
         hasNext: false
