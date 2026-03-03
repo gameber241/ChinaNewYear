@@ -5,6 +5,7 @@ import { ReelBase } from './ReelBase';
 import { ESymbolFace } from '../Enum/ESymbolFace';
 import { Symbol } from './Symbol';
 import { BigWin } from './Bigwin';
+import { FreeSpines } from './FreeSpines';
 
 const { ccclass, property } = _decorator;
 
@@ -27,7 +28,6 @@ export class GameManager extends Component {
     @property(Node) optionSetting: Node = null!;
     // @property(AutoCtrl) UiAuto: AutoCtrl = null!;
     @property(Node) history: Node = null!;
-    @property(Node) maskSymbol: Node = null
 
     public static instance: GameManager = null;
 
@@ -70,7 +70,6 @@ export class GameManager extends Component {
     /* ================= SPIN ================= */
 
     PlaySpin() {
-
         const round = sampleJson.rounds[this.indexCurrentReel];
 
         // round.isScratch
@@ -91,96 +90,90 @@ export class GameManager extends Component {
 
     /* ================= SCRATCH ================= */
 
-    RollDataScratch(grid) {
+    async RollDataScratch(grid) {
         const indexReel = this.CheckReelFull3Scratch();
         if (indexReel === this.reels.length - 1) {
             this.RollDataNormal(this);
             return;
         }
-        this.reels.forEach(r =>
-            this.scheduleOnce(
-                () => r.startRoll(),
-                this.isTurbo ? 0.16 : 0.3
-            )
-        );
+        for (let i = 0; i < this.reels.length; i++) {
+            let current = i;
+            this.reels[current].startRoll();
+        }
+        await GameManager.waitForSeconds(1);
+
+
         let stopped = 0;
         const phase1 = indexReel + 1;
         for (let i = 0; i <= indexReel; i++) {
-            this.reels[i].setOnFullyStopped(() => {
-                if (++stopped !== phase1) return;
-                this.stopPhase2(indexReel, grid);
-                for (let j = 0; j <= indexReel; j++)
-                    this.reels[j].symbols
-                        .forEach(e => {
-                            if (e.face === ESymbolFace.SCRATCH)
-                                e.PlayIdleScratch();
-                        });
+            this.reels[i].stopRoll(grid[i])
+            await GameManager.waitForSeconds(0.2);
 
-            });
+            if (++stopped !== phase1) continue;
+            this.stopPhase2(indexReel, grid);
+            for (let j = 0; j <= indexReel; j++)
+                this.reels[j].symbols
+                    .forEach(e => {
+                        if (e.face === ESymbolFace.SCRATCH && e.stackIndex == 0)
+                            e.PlayIdleScratch();
+                    });
+            return
 
-            this.scheduleOnce(
-                () => this.reels[i].stopRoll(grid[i]),
-                this.isTurbo ? (0.16 + 0.16 * i) : (1 + 0.3 * i)
-            );
+
         }
     }
 
-    private stopPhase2(index: number, grid) {
+    private async stopPhase2(index: number, grid: any[]) {
+
         let current = index + 1;
-        this.playAnimReelScratch(current);
-        // SoundToggle.instance.PlayRollScatch();
-        const time = 4;
-        const stopNext = () => {
+
+        while (current < this.reels.length) {
             const reel = this.reels[current];
-            reel.setOnFullyStopped(() => {
-                current++;
-                reel.symbols.forEach(e => {
-                    if (e.face === ESymbolFace.SCRATCH)
-                        e.PlayIdleScratch();
-                });
-
-                if (current >= this.reels.length) {
-                    this.playAnimReelScratch(99);
-                    this.scheduleOnce(() => {
-                        this.ShowAllReef(
-                            sampleJson.rounds[
-                                this.indexCurrentReel
-                            ].freeSpin > 0
-                        );
-
-                        this.scheduleOnce(() => {
-                            const r = sampleJson.rounds[this.indexCurrentReel];
-                            if (r.freeSpin > 0) {
-                                // SoundToggle.instance.playFreewin();
-                                // FreeSpines.instance.playAnimation(() => {
-                                //     this.SetFreeSpines();
-                                //     this.PlayFreeSpin(r.freeSpin);
-
-                                //     this.scheduleOnce(
-                                //         () => this.CheckContinueSpin(),
-                                //         2
-                                //     );
-
-                                // });
-                            } else this.CheckContinueSpin();
-                        }, 1);
-
-                    }, 0.4);
-
-                    return;
+            reel.changeSpeed(0.07)
+            // play animation scratch cho reel hiện tại
+            this.playAnimReelScratch(current);
+            // play idle scratch cho symbol
+            reel.symbols.forEach(e => {
+                if (e.face === ESymbolFace.SCRATCH && e.stackIndex === 0) {
+                    e.PlayIdleScratch();
                 }
-
-                // SoundToggle.instance.PlayRollScatch();
-                this.playAnimReelScratch(current);
-                this.scheduleOnce(stopNext, time);
             });
 
+            // đợi 4s
+            await GameManager.waitForSeconds(4);
+
+            // stop reel
             reel.stopRoll(grid[current]);
-        };
+            reel._delay = 0.04
 
-        this.scheduleOnce(stopNext, time);
+            current++;
+        }
+
+        // Khi stop hết reel
+        this.playAnimReelScratch(99);
+
+        this.scheduleOnce(() => {
+            this.ShowAllReef(
+                sampleJson.rounds[this.indexCurrentReel].freeSpin > 0
+            );
+
+            this.scheduleOnce(() => {
+                const r = sampleJson.rounds[this.indexCurrentReel];
+                FreeSpines.instance.playAnimation(() => {
+
+                })
+                // if (r.freeSpin > 0) {
+                //     this.SetFreeSpines();
+                //     this.PlayFreeSpin(r.freeSpin);
+                //     this.scheduleOnce(() => this.CheckContinueSpin(), 2);
+                // } else {
+                //     this.CheckContinueSpin();
+                // }
+
+            }, 1);
+
+        }, 0.4);
     }
-
     /* ================= NORMAL ================= */
     async RollDataNormal(grid) {
         for (let i = 0; i < this.reels.length; i++) {
@@ -202,30 +195,40 @@ export class GameManager extends Component {
     /* ================= CLEAR ================= */
 
     async ClearData() {
-        this.maskSymbol.active = true;
         await GameManager.waitForSeconds(0.05);
 
         const r = sampleJson.rounds[this.indexCurrentReel];
+        this.reels.forEach(e => {
+            e.symbols.forEach(e => {
+                e.ShowMask()
+            })
+        })
         // Win animation delay từng symbol
         for (let i = 0; i < r.win.positions.length; i++) {
             const e = r.win.positions[i];
-            this.symBolArray[e.c][e.r].ChangeLayerWin();
+            this.symBolArray[e.c][e.r].AnimationWin();
             await GameManager.waitForSeconds(0.05);
         }
 
+        if (r.flips.length) {
+            this.FlipData();
+        }
         // dispose sau khi animation xong
         for (const e of r.win.positions) {
             this.symBolArray[e.c][e.r].Dispose();
         }
 
-        if (r.flips.length) {
-            await this.FlipData();
-        }
+
 
         await GameManager.waitForSeconds(1.1);
+        this.reels.forEach(e => {
+            e.symbols.forEach(e => {
+                e.AnimationWin()
+            })
+        })
         this.reels.forEach((reel, i) => reel.cascadeDrop(r.above[i]));
+
         await GameManager.waitForSeconds(1);
-        this.maskSymbol.active = false;
         if (r.hasNext) {
             this.indexCurrentReel++;
             await this.ClearData(); // ⭐ cực quan trọng
@@ -352,7 +355,7 @@ export class GameManager extends Component {
             this.indexCurrentReel
         ].grid.forEach(r =>
             r.forEach(e => {
-                if (e.i === ESymbolFace.SCRATCH)
+                if (e.i === ESymbolFace.SCRATCH && e.mi == 0)
                     count++;
             })
         );
@@ -369,7 +372,7 @@ export class GameManager extends Component {
         for (let i = 0; i < grid.length; i++) {
 
             for (const e of grid[i])
-                if (e.i === ESymbolFace.SCRATCH)
+                if (e.i === ESymbolFace.SCRATCH && e.mi == 0)
                     count++;
 
             if (count >= 3) return i;
@@ -394,13 +397,13 @@ export class GameManager extends Component {
 
         this.reels.forEach(e => {
 
-            // e.symbols.forEach(s => {
+            e.symbols.forEach(s => {
 
-            //     if (s.face === ESymbolFace.SCRATCH && !spine)
-            //         s.playAnimation(
-            //             s.getNameIdle(), true
-            //         );
-            // });
+                if (s.face === ESymbolFace.SCRATCH && !spine)
+                    s.playiconAnimation(
+                        s.getNameIdle(), true
+                    );
+            });
 
             tween(e.maskEff.getComponent(UIOpacity))
                 .to(0.3, { opacity: 0 })

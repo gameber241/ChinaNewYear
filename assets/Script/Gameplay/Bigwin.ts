@@ -1,4 +1,4 @@
-import { _decorator, Component, Input, Label, sp, Tween, tween } from 'cc';
+import { _decorator, Component, Input, Label, Node, sp, Tween, tween } from 'cc';
 const { ccclass, property } = _decorator;
 
 enum WinType {
@@ -42,6 +42,9 @@ export class BigWin extends Component {
     @property(Label)
     textMega: Label = null!;
 
+    @property(Node)
+    mask: Node = null
+
     // ================================
 
     private currentValue = 0;
@@ -74,7 +77,7 @@ export class BigWin extends Component {
     ) {
 
         this.resetState();
-
+        this.mask.active = true
         let fx: sp.Skeleton;
         let label: Label;
         let startAnim = "";
@@ -193,10 +196,9 @@ export class BigWin extends Component {
         }
 
         this.scheduleOnce(() => {
-
+            this.mask.active = false
             fx.setAnimation(0, endAnim, false);
             label.node.active = false;
-
             this.scheduleOnce(() => {
                 fx.node.active = false;
                 callback?.();

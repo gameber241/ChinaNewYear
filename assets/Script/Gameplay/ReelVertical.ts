@@ -5,7 +5,7 @@ const { ccclass } = _decorator;
 @ccclass('ReelVertical')
 export class ReelVertical extends ReelBase {
     public VISIBLE_COUNT = 5;
-    public FIRST_VISIBLE = 2
+    public FIRST_VISIBLE = 5
 
     public getCellSize(ui: UITransform): number {
         return ui.contentSize.height;

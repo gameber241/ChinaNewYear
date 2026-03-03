@@ -1,8 +1,9 @@
-import { _decorator, Component, Enum, Layers, sp, tween, Tween, Vec3 } from 'cc';
+import { _decorator, Color, Component, Enum, Layers, Size, sp, tween, Tween, UIOpacity, UITransform, Vec3 } from 'cc';
 import { ESymbolFace } from '../Enum/ESymbolFace';
 import { SymbolFrameState } from '../Enum/ESymbolFrameState';
 import { SymbolCell } from './SymbolCell';
 import { ReelBase } from './ReelBase';
+import { GameManager } from './GameManager';
 
 const { ccclass, property } = _decorator;
 export enum MoveType {
@@ -46,7 +47,6 @@ export class Symbol extends Component {
     MoveType
     @property(sp.Skeleton) icon: sp.Skeleton = null!;
     @property(sp.Skeleton) frame: sp.Skeleton = null!;
-
     reel: ReelBase = null!;
     reelIndex = 0;
 
@@ -71,8 +71,8 @@ export class Symbol extends Component {
     };
 
     protected start() {
-        // this.layer = this.icon.node.layer
-        this.layer = 1
+        this.layer = this.icon.node.layer
+        // this.layer = 1
         this.icon.node.layer = Layers.Enum.DEFAULT
     }
 
@@ -134,8 +134,9 @@ export class Symbol extends Component {
         this.UpdateFrame();
         this.playiconAnimation(this.getNameIdle(), true);
         this.playFrameAnimation(this.getNameIdle(), true)
-        this.icon.node.setPosition(0, -86 * this.stackSize / 2 + 86 / 2, 0)
-        this.frame.node.setPosition(0, -86 * this.stackSize / 2 + 86 / 2, 0)
+        this.icon.node.setPosition(0, -84 * this.stackSize / 2 + 84 / 2, 0)
+        this.frame.node.setPosition(0, -84 * this.stackSize / 2 + 84 / 2, 0)
+
 
 
     }
@@ -179,84 +180,141 @@ export class Symbol extends Component {
         this.face = faces[Math.floor(Math.random() * faces.length)];
         this.frameState = SymbolFrameState.NORMAL;
     }
+
     rollToIndex(time: number = 0.2, type: string = Symbol.MoveType.MOVING) {
+
         const newPosition = this.reel.getSymbolPosition(this.reelIndex);
-        // console.log(newPosition)
-        Tween.stopAllByTarget(this.node);
 
-        if (type === Symbol.MoveType.MOVING)
-            this.SetUiMove();
-        else {
-            this.playiconAnimation(this.getNameIdle(), true);
-            this.playFrameAnimation(this.getNameIdle(), true);
+        // ❗ CHỈ stop tween khi STOP, không stop khi MOVING
+        if (type === Symbol.MoveType.STOP) {
+            Tween.stopAllByTarget(this.node);
         }
 
-        if (this.reelIndex === 1)
-            this.setRandomFace();
-
-        const ease = {
-            'start': 'bounceIn',
-            'stop': 'bounceOut',
-            'moving': 'linear'
-        }
+        const easingType =
+            type === Symbol.MoveType.MOVING
+                ? "linear"
+                : "cubicOut";
 
         return tween(this.node)
-            .to(time, { position: newPosition }, { easing: ease[type] })
+            .to(time, { position: newPosition }, { easing: easingType })
             .call(() => {
-                if (type == Symbol.MoveType.STOP) {
-                    this.exploAnim()
+
+                this.reelIndex =
+                    this.reelIndex % this.reel.symbols.length;
+
+                if (type === Symbol.MoveType.STOP) {
+                    this.exploAnim();
                 }
+
             })
             .start();
-
     }
 
 
-    DropToindex(time = 0.2) {
+    DropToindex(time: number = 0.2) {
         if (!this.reel) return;
-        const pos = this.reel.getSymbolPosition(this.reelIndex);
-        Tween.stopAllByTarget(this.node);
 
-        tween(this.node)
-            .to(time, { position: pos })
-            .call(() => this.exploAnim())
+        const newPosition = this.reel.getSymbolPosition(this.reelIndex);
+        Tween.stopAllByTarget(this.node);
+        return tween(this.node)
+            .to(time, { position: newPosition })
+            .call(() => {
+                this.exploAnim()
+            })
             .start();
     }
 
-    exploAnim(onComplete?: () => void) {
 
-        if (this.face == ESymbolFace.SCRATCH || this.face == ESymbolFace.WILD) {
-            this.icon.node.layer = this.layer
+
+    exploAnim(bounce = 10, onComplete?: () => void) {
+        if (!this.isRoot || !this.reel) {
+            onComplete && onComplete();
+            return;
         }
-        const action = this.getNameAction();
-        const idle = this.getNameIdle();
+        const basePos = this.reel.getSymbolPosition(this.reelIndex);
+        const isHorizontal = this.reel.isHorizontal();
 
-        if (!action || !idle) { onComplete?.(); return; }
+        const upPos = isHorizontal
+            ? basePos.clone().add3f(bounce, 0, 0)
+            : basePos.clone().add3f(0, bounce, 0);
 
-        this.playiconAnimation(action, false);
-        this.addAnimation(idle, true);
-        this.playFrameAnimation(idle, true)
-        onComplete?.();
+        tween(this.node)
+            .set({ position: basePos })
+            .to(0.08, { position: upPos }, { easing: 'sineOut' })
+            .to(0.08, { position: basePos }, { easing: 'sineIn' })
+            .call(() => {
+                // if (GameManager.instance.CheckScratch() == false)
+                //     this.icon.node.layer = this.layer
+                // else {
+                //     if (this.face == ESymbolFace.SCRATCH) {
+                //         this.icon.node.layer = this.layer
+                //     }
+                // }
+
+                if (this.face == ESymbolFace.SCRATCH) {
+                    this.icon.node.layer = this.layer
+                    const animNameAction = this.getNameAction();
+                    const animNameIdle = this.getNameIdle()
+                    this.icon.setCompleteListener((tracking) => {
+                        if (tracking.animation.name != animNameIdle) return
+                        this.icon.setCompleteListener(null);
+                    });
+                    this.playiconAnimation(animNameAction, true)
+                    this.addAnimation(animNameIdle, true)
+
+                }
+                else {
+                    const animNameAction = this.getNameAction();
+                    const animNameIdle = this.getNameIdle()
+                    this.icon.setCompleteListener((tracking) => {
+                        if (tracking.animation.name != animNameIdle) return
+                        this.icon.setCompleteListener(null);
+                    });
+                    this.playiconAnimation(animNameIdle, true)
+                }
+
+                onComplete && onComplete();
+
+
+            })
+            .start();
     }
 
+    snapToGrid() {
+        const cellHeight = 84; // hoặc this.height nếu bạn lưu
+        const y = this.node.position.y;
+
+        const snappedY = Math.round(y / cellHeight) * cellHeight;
+
+        this.node.setPosition(
+            this.node.position.x,
+            snappedY,
+            this.node.position.z
+        );
+    }
     FlipSymbol(data, onComplete?: () => void) {
-
+        this.AnimationWin()
         if (!this.isRoot) { onComplete?.(); return; }
-
-        const name = `icon_size${this.stackSize}_action_upgrade`;
+        this.isInit = true;
+        this.face = data.i;
+        this.frameState = data.f;
+        this.stackSize = data.ms;
+        this.stackIndex = data.mi;
+        this.stackId = data.sid;
+        const name = `icon_Wild${this.stackSize}_appear`;
+        this.playiconAnimation(name, false);
 
         this.icon.setCompleteListener(() => {
             this.icon.setCompleteListener(null);
 
-            this.InitSymbol(data);
+            this.UpdateFrame()
+            // this.InitSymbol(data);
 
-            this.playiconAnimation(this.getNameAction(), false);
+            // this.playiconAnimation(this.getNameAction(), false);
             this.addAnimation(this.getNameIdle(), true);
 
             onComplete?.();
         });
-
-        this.playiconAnimation(name, false);
     }
 
     Dispose() {
@@ -280,13 +338,18 @@ export class Symbol extends Component {
     }
 
 
-    ChangeLayerWin() {
-        this.icon.node.layer = 2
-        if (this.face == ESymbolFace.SCRATCH || this.face == ESymbolFace.WILD) {
-            this.icon.node.layer = 3
-
-        }
+    ShowMask() {
+        this.icon.color = new Color(158, 158, 158, 255)
+        this.frame.color = new Color(158, 158, 158, 255)
     }
+
+
+    AnimationWin() {
+        tween(this.icon).to(0.1, { color: new Color(255, 255, 255, 255) }).start()
+        tween(this.frame).to(0.1, { color: new Color(255, 255, 255, 255) }).start()
+
+    }
+
 
 }
 
