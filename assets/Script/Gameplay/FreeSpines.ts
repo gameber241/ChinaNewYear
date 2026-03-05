@@ -16,6 +16,9 @@ export class FreeSpines extends Component {
     @property(Label)
     lbFreeSpin: Label = null
 
+    @property(Node)
+    listSelects: Node[] = []
+
     protected onLoad(): void {
         FreeSpines.instance = this
     }
@@ -32,6 +35,12 @@ export class FreeSpines extends Component {
 
     playAnimation(callback) {
         this.fx.node.active = true
+        this.fx.setCompleteListener((tracking) => {
+            if (tracking.animation.name != "_Free_Start") return
+            this.listSelects.forEach(e => {
+                e.active = true
+            })
+        });
         this.fx.setAnimation(0, "_Free_Start", false)
         this.fx.addAnimation(0, "_Free_loop", true)
 
@@ -143,8 +152,26 @@ export class FreeSpines extends Component {
         this.lbFreeSpin.string = round
     }
 
-    btnSelect1() {
+    playSelect(index: number, numberSpin) {
+        const animName = `_Free_Select${index}`;
 
+        this.fx.setAnimation(0, animName, false);
+
+        this.fx.setCompleteListener((tracking) => {
+            if (tracking.animation.name !== animName) return;
+
+            this.listSelects.forEach(e => {
+                e.active = false;
+            });
+
+            this.fx.node.active = false;
+        });
     }
+
+    btnSelect1() { this.playSelect(1, 18); }
+    btnSelect2() { this.playSelect(2, 13); }
+    btnSelect3() { this.playSelect(3, 8); }
+    btnSelect4() { this.playSelect(4, 5); }
+    btnSelect5() { this.playSelect(5, 3); }
 }
 
