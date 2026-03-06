@@ -34,13 +34,7 @@ export class ComboManager extends Component {
     }
 
     protected start(): void {
-        // this.playAnimation()
-        this.ShowAnimationCombo(30.3)
-
-        this.scheduleOnce(() => {
-            this.SetCombo(3, 100)
-        }, 1)
-
+        this.playAnimation()
     }
 
 
@@ -70,14 +64,15 @@ export class ComboManager extends Component {
         this.comboSkeleton.setCompleteListener((tracking) => {
             if (tracking.animation.name != "Ball_action") return
             this.showAllCombo()
-            if (total) {
-                this.ShowAnimationCombo(total)
-            }
+
         });
     }
 
 
     SetCombo(comboNext, total) {
+        if (total) {
+            this.ShowAnimationCombo(total)
+        }
         this.comboAfterNum = this.combocurrentNum
         this.combocurrentNum = this.comboBeforeNum
         this.comboBeforeNum = comboNext
@@ -95,6 +90,8 @@ export class ComboManager extends Component {
 
     ShowAnimationCombo(total) {
         if (this.combocurrentNum == 1) {
+            this.total.node.setScale(0.4, 0.4)
+            tween(this.total.node).to(0.3, { scale: new Vec3(1, 1) }).start()
             this.total.string = total
             this.total.node.active = true
         }
@@ -104,11 +101,15 @@ export class ComboManager extends Component {
             this.comboAnimation.node.active = true
             this.comboAnimation.node.setPosition(-11.948, 334.589)
             tween(this.comboAnimation.node).to(0.3, { position: new Vec3(-11.948, 510.458) })
+                .to(0.3, { scale: new Vec3(0.4, 0.4) })
                 .call(() => {
                     // this.total.node.active = true
+                    tween(this.total.node).to(0.3, { scale: new Vec3(0.4, 0.4) })
+                        .to(0.3, { scale: new Vec3(1, 1) })
+                        .start()
                     this.total.string = total
-
                     this.comboAnimation.node.active = false
+                    this.comboAnimation.node.setScale(1, 1, 1)
                 })
                 .start()
         }

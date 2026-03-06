@@ -1,11 +1,13 @@
 
-import { _decorator, Component, Label, Node, tween, UIOpacity, Vec3 } from 'cc';
+import { _decorator, Component, Label, Node, tween, UIOpacity, Vec3, instantiate } from 'cc';
 import { sampleJson } from './DataExample';
 import { ReelBase } from './ReelBase';
 import { ESymbolFace } from '../Enum/ESymbolFace';
 import { Symbol } from './Symbol';
 import { BigWin } from './Bigwin';
 import { FreeSpines } from './FreeSpines';
+import { ComboManager } from './ComboManager';
+import { BtSpines } from './BtSpines';
 
 const { ccclass, property } = _decorator;
 
@@ -50,12 +52,9 @@ export class GameManager extends Component {
     onLoad() { GameManager.instance = this; }
 
     protected start() {
-        // this.UpdatePrice();
-        // this.SetNormal();
-        this.scheduleOnce(() => {
-            this.initGrid();
-            this.PlaySpin()
-        }, 1)
+
+        this.initGrid();
+
 
     }
 
@@ -218,7 +217,7 @@ export class GameManager extends Component {
             this.symBolArray[e.c][e.r].Dispose();
         }
 
-
+        ComboManager.instantiate.SetCombo(sampleJson.rounds[this.indexCurrentReel].total, sampleJson.rounds[this.indexCurrentReel].comboNext)
 
         await GameManager.waitForSeconds(1.1);
         this.reels.forEach(e => {
@@ -234,6 +233,7 @@ export class GameManager extends Component {
             await this.ClearData(); // ⭐ cực quan trọng
         }
         else {
+            ComboManager.instantiate.total.node.active = false
             this.ShowBigWin();
         }
     }
@@ -305,20 +305,20 @@ export class GameManager extends Component {
         runNext();
 
 
-        // if (r.totalPrice && r.isScratch) {
+        if (r.totalPrice && r.isScratch) {
 
-        //     // SoundToggle.instance.playTotalWin();
+            // SoundToggle.instance.playTotalWin();
 
-        //     // FreeSpines.instance.ShowTotalSpin(() => {
+            // FreeSpines.instance.ShowTotalSpin(() => {
 
-        //     //     SoundToggle.instance.stopTotalWIn();
+            //     SoundToggle.instance.stopTotalWIn();
 
-        //     //     next();
+            //     next();
 
-        //     // }, 4000);
+            // }, 4000);
 
-        //     return;
-        // }
+            return;
+        }
     }
 
     /* ================= FLOW ================= */
