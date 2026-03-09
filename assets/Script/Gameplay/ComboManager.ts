@@ -1,4 +1,5 @@
 import { _decorator, Component, Label, Node, sp, instantiate, tween, Vec3 } from 'cc';
+import { Total } from './Total';
 const { ccclass, property } = _decorator;
 
 @ccclass('ComboManager')
@@ -50,9 +51,9 @@ export class ComboManager extends Component {
         this.comboAfter.node.active = true
         this.comboBefore.node.active = true
 
-        this.comboCurrent.string = "x" + this.combocurrentNum
-        this.comboBefore.string = "x" + this.comboBeforeNum
-        this.comboAfter.string = "x" + this.comboAfterNum
+        this.comboCurrent.string = this.combocurrentNum + "x"
+        this.comboBefore.string = this.comboBeforeNum + "x"
+        this.comboAfter.string = this.comboAfterNum + "x"
     }
 
 
@@ -70,6 +71,7 @@ export class ComboManager extends Component {
 
 
     SetCombo(comboNext, total) {
+        console.log(comboNext)
         if (total) {
             this.ShowAnimationCombo(total)
         }
@@ -87,29 +89,50 @@ export class ComboManager extends Component {
         this.showAllCombo()
 
     }
-
     ShowAnimationCombo(total) {
+
         if (this.combocurrentNum == 1) {
-            this.total.node.setScale(0.4, 0.4)
-            tween(this.total.node).to(0.3, { scale: new Vec3(1, 1) }).start()
-            this.total.string = total
+
             this.total.node.active = true
+            this.total.node.setScale(new Vec3(0.4, 0.4, 1))
+            this.total.string = total
+
+            tween(this.total.node)
+                .to(0.25, { scale: new Vec3(1, 1, 1) }, { easing: "backOut" })
+                .start()
+
+            Total.instance.setTotal(total)
         }
         else {
-            this.comboAnimation.string = "x" + this.combocurrentNum
-            // this.total.string = total
+            this.comboAnimation.string = this.combocurrentNum + "x"
             this.comboAnimation.node.active = true
-            this.comboAnimation.node.setPosition(-11.948, 334.589)
-            tween(this.comboAnimation.node).to(0.3, { position: new Vec3(-11.948, 510.458) })
-                .to(0.3, { scale: new Vec3(0.4, 0.4) })
+
+            this.comboAnimation.node.setPosition(-11.948, 334.589, 0)
+            this.comboAnimation.node.setScale(new Vec3(1, 1, 1))
+
+            tween(this.comboAnimation.node)
+                // bay lên trước
+                .to(0.3, { position: new Vec3(-11.948, 547.73, 0) })
+                .to(0.2, { scale: new Vec3(1.2, 2, 1) })
+                // sau đó mới nhỏ lại
+                .to(0.2, { scale: new Vec3(0.4, 0.4, 1) })
+
                 .call(() => {
-                    // this.total.node.active = true
-                    tween(this.total.node).to(0.3, { scale: new Vec3(0.4, 0.4) })
-                        .to(0.3, { scale: new Vec3(1, 1) })
-                        .start()
+
+                    this.total.node.active = true
+                    this.total.node.setScale(new Vec3(0.4, 0.4, 1))
                     this.total.string = total
+
+                    // total phóng to
+                    tween(this.total.node)
+                        .to(0.25, { scale: new Vec3(1.2, 1.2, 1) })
+                        .to(0.1, { scale: new Vec3(1, 1, 1) })
+                        .start()
+
                     this.comboAnimation.node.active = false
-                    this.comboAnimation.node.setScale(1, 1, 1)
+                    this.comboAnimation.node.setScale(new Vec3(1, 1, 1))
+
+                    Total.instance.setTotal(total)
                 })
                 .start()
         }

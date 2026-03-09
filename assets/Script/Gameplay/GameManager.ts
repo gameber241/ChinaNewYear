@@ -1,6 +1,5 @@
 
-import { _decorator, Component, Label, Node, tween, UIOpacity, Vec3, instantiate } from 'cc';
-import { sampleJson } from './DataExample';
+import { _decorator, Component, Label, Node, tween, UIOpacity, Vec3, instantiate, sp, randomRangeInt } from 'cc';
 import { ReelBase } from './ReelBase';
 import { ESymbolFace } from '../Enum/ESymbolFace';
 import { Symbol } from './Symbol';
@@ -8,6 +7,8 @@ import { BigWin } from './Bigwin';
 import { FreeSpines } from './FreeSpines';
 import { ComboManager } from './ComboManager';
 import { BtSpines } from './BtSpines';
+import { Total } from './Total';
+import { exampleScatch1, exampleScatch2, exampleScatch3, sampleJson, sampleJson1, sampleJson2 } from './DataExample';
 
 const { ccclass, property } = _decorator;
 
@@ -15,21 +16,22 @@ const { ccclass, property } = _decorator;
 export class GameManager extends Component {
 
     @property({ type: ReelBase }) reels: ReelBase[] = [];
-    @property(Label) walet: Label = null!;
-    @property(Label) priceTienCuoc: Label = null!;
-    @property(Label) totalPrice: Label = null!;
-    @property(Label) totalPriceBot: Label = null!;
+    @property(sp.Skeleton) bg: sp.Skeleton = null
+    @property(Node)
+    buyFeature: Node = null
 
-    @property(Node) headerNormal: Node = null!;
-    @property(Node) headerFreeSpines: Node = null!;
-    @property(Node) frameReel1Normal: Node = null!;
-    @property(Node) frameReel1FreeSpin: Node = null!;
-    @property(Node) footFreeSpin: Node = null!;
-    @property(Node) walletNode: Node = null!;
-    @property(Node) footer: Node = null!;
-    @property(Node) optionSetting: Node = null!;
+    @property(Node)
+    freeGame: Node = null
+
+    @property(Label)
+    currentFree: Label = null
+
+    @property(Label)
+    totalFree: Label = null
+
+
     // @property(AutoCtrl) UiAuto: AutoCtrl = null!;
-    @property(Node) history: Node = null!;
+
 
     public static instance: GameManager = null;
 
@@ -52,11 +54,13 @@ export class GameManager extends Component {
     onLoad() { GameManager.instance = this; }
 
     protected start() {
-
+        Total.instance.SetTextNormal()
         this.initGrid();
-
+        this.SetDataExample()
 
     }
+
+    dataExample = null
 
     /* ================= GRID ================= */
 
@@ -69,16 +73,18 @@ export class GameManager extends Component {
     /* ================= SPIN ================= */
 
     PlaySpin() {
-        const round = sampleJson.rounds[this.indexCurrentReel];
+        BtSpines.intance.isSpin = true
+        const round = this.dataExample.rounds[this.indexCurrentReel];
+        round.isScratch
+            ? (this.SetFreeSpines(), this.PlayFreeSpin(round.freeSpin))
+            : this.SetNormal();
 
-        // round.isScratch
-        //     ? (this.SetFreeSpines(), this.PlayFreeSpin(round.freeSpin))
-        //     : this.SetNormal();
-
-        if (sampleJson.rounds.length <= this.indexCurrentReel) return
         this.GenerateMap(round.grid);
+        if (round.isScratch == true && round.freeSpinCurrent > 0) {
+            this.currentFree.string = round.freeSpinCurrent
+            this.totalFree.string = round.freeSpinTotal
 
-        // ComboManager.instance.ScrollToCombo(round.multiplier);
+        }
     }
 
     GenerateMap(grid: any[][]) {
@@ -123,7 +129,7 @@ export class GameManager extends Component {
     }
 
     private async stopPhase2(index: number, grid: any[]) {
-
+        Total.instance.setTextScratch()
         let current = index + 1;
 
         while (current < this.reels.length) {
@@ -153,11 +159,11 @@ export class GameManager extends Component {
 
         this.scheduleOnce(() => {
             this.ShowAllReef(
-                sampleJson.rounds[this.indexCurrentReel].freeSpin > 0
+                this.dataExample.rounds[this.indexCurrentReel].freeSpin > 0
             );
 
             this.scheduleOnce(() => {
-                const r = sampleJson.rounds[this.indexCurrentReel];
+                const r = this.dataExample.rounds[this.indexCurrentReel];
                 FreeSpines.instance.playAnimation(() => {
 
                 })
@@ -196,7 +202,7 @@ export class GameManager extends Component {
     async ClearData() {
         await GameManager.waitForSeconds(0.05);
 
-        const r = sampleJson.rounds[this.indexCurrentReel];
+        const r = this.dataExample.rounds[this.indexCurrentReel];
         this.reels.forEach(e => {
             e.symbols.forEach(e => {
                 e.ShowMask()
@@ -216,8 +222,8 @@ export class GameManager extends Component {
         for (const e of r.win.positions) {
             this.symBolArray[e.c][e.r].Dispose();
         }
-
-        ComboManager.instantiate.SetCombo(sampleJson.rounds[this.indexCurrentReel].total, sampleJson.rounds[this.indexCurrentReel].comboNext)
+        console.log(this.dataExample.rounds[this.indexCurrentReel])
+        ComboManager.instantiate.SetCombo(this.dataExample.rounds[this.indexCurrentReel].comboNext, this.dataExample.rounds[this.indexCurrentReel].total)
 
         await GameManager.waitForSeconds(1.1);
         this.reels.forEach(e => {
@@ -242,7 +248,7 @@ export class GameManager extends Component {
 
     FlipData(onComplete?: () => void) {
 
-        const flips = sampleJson
+        const flips = this.dataExample
             .rounds[this.indexCurrentReel].flips;
 
         if (!flips.length) { onComplete?.(); return; }
@@ -264,27 +270,52 @@ export class GameManager extends Component {
 
         });
     }
-
     ShowBigWin() {
-        const r = sampleJson.rounds[this.indexCurrentReel];
-        const next = () => this.CheckContinueSpin();
+        const r = this.dataExample.rounds[this.indexCurrentReel];
+        const next = () => {
+            this.indexCurrentReel = 0;
+            if (r.isScratch === true && r.freeSpinCurrent > 1) {
+                this.SetDataFreeSpin()
+                this.PlaySpin();
+            }
+            else {
+                BtSpines.intance.isSpin = false;
+                this.SetNormal();
+                ComboManager.instantiate.SetDefualt()
+            }
 
-        // Tạo danh sách các win cần chạy theo đúng thứ tự
+        };
+        // danh sách animation cần chạy
         const winQueue: Array<() => void> = [];
 
         if (r.BigWin) {
-            winQueue.push(() => { BigWin.instance.showBigWin(runNext, r.BigWin) });
+            winQueue.push(() => {
+                BigWin.instance.showBigWin(runNext, r.BigWin);
+            });
         }
 
         if (r.SuperWin) {
-            winQueue.push(() => { BigWin.instance.showSuperWin(runNext, r.SuperWin) });
+            winQueue.push(() => {
+                BigWin.instance.showSuperWin(runNext, r.SuperWin);
+            });
         }
 
         if (r.MegaWin) {
-            winQueue.push(() => { BigWin.instance.showMegaWin(runNext, r.MegaWin) });
+            winQueue.push(() => {
+                BigWin.instance.showMegaWin(runNext, r.MegaWin);
+            });
         }
 
-        // Nếu không có cái nào
+        // total win
+        if (r.totalPrice > 0 && r.isScratch) {
+            winQueue.push(() => {
+                FreeSpines.instance.ShowTotalSpin(() => {
+                    runNext();
+                }, 4000);
+            });
+        }
+
+        // nếu không có animation nào
         if (winQueue.length === 0) {
             next();
             return;
@@ -297,28 +328,13 @@ export class GameManager extends Component {
                 next();
                 return;
             }
+
             const fn = winQueue[index];
             index++;
             fn();
         };
-
+        // bắt đầu chạy queue
         runNext();
-
-
-        if (r.totalPrice && r.isScratch) {
-
-            // SoundToggle.instance.playTotalWin();
-
-            // FreeSpines.instance.ShowTotalSpin(() => {
-
-            //     SoundToggle.instance.stopTotalWIn();
-
-            //     next();
-
-            // }, 4000);
-
-            return;
-        }
     }
 
     /* ================= FLOW ================= */
@@ -327,7 +343,7 @@ export class GameManager extends Component {
 
         // if (!Spin.instance.isAuto) {
 
-        //     if (sampleJson.rounds.length - 1 >
+        //     if (this.dataExample.rounds.length - 1 >
         //         this.indexCurrentReel) {
 
         //         this.indexCurrentReel++;
@@ -351,9 +367,7 @@ export class GameManager extends Component {
 
     CheckScratch() {
         let count = 0;
-        sampleJson.rounds[
-            this.indexCurrentReel
-        ].grid.forEach(r =>
+        this.dataExample.rounds[this.indexCurrentReel].grid.forEach(r =>
             r.forEach(e => {
                 if (e.i === ESymbolFace.SCRATCH && e.mi == 0)
                     count++;
@@ -366,7 +380,7 @@ export class GameManager extends Component {
 
         let count = 0;
 
-        const grid = sampleJson
+        const grid = this.dataExample
             .rounds[this.indexCurrentReel].grid;
 
         for (let i = 0; i < grid.length; i++) {
@@ -420,4 +434,33 @@ export class GameManager extends Component {
         return new Promise(resolve => setTimeout(resolve, s * 1000));
     }
 
+
+    SetFreeSpines() {
+        this.bg.setAnimation(0, "Free_Idle", true)
+        this.freeGame.active = true
+        this.buyFeature.active = false
+    }
+    SetNormal() {
+        this.bg.setAnimation(0, "Normal_Idle", true)
+        this.freeGame.active = false
+        this.buyFeature.active = true
+    }
+
+    indexFree = 0
+    SetDataFreeSpin() {
+        let x = [sampleJson, sampleJson1, sampleJson2]
+        if (this.indexFree == 0) this.dataExample = exampleScatch1
+        if (this.indexFree == 1) this.dataExample = exampleScatch2
+        if (this.indexFree == 2) this.dataExample = exampleScatch3
+        if (this.indexFree > 2) this.SetDataExample()
+        this.indexFree++
+    }
+
+    SetDataExample() {
+        let x = [sampleJson2, sampleJson1]
+
+        // this.dataExample = x[randomRangeInt(0, 3)]
+        this.dataExample = sampleJson2
+
+    }
 }

@@ -17,7 +17,7 @@ export class BtSpines extends Component {
     isSpin = false
     BtnSpin() {
         if (this.isSpin == true) return
-        this.isSpin = true
+       
         this.spin.setAnimation(0, "action", false)
         this.spin.addAnimation(0, "idle", true)
         GameManager.instance.PlaySpin()

@@ -243,14 +243,6 @@ export class Symbol extends Component {
             .to(0.08, { position: upPos }, { easing: 'sineOut' })
             .to(0.08, { position: basePos }, { easing: 'sineIn' })
             .call(() => {
-                // if (GameManager.instance.CheckScratch() == false)
-                //     this.icon.node.layer = this.layer
-                // else {
-                //     if (this.face == ESymbolFace.SCRATCH) {
-                //         this.icon.node.layer = this.layer
-                //     }
-                // }
-
                 if (this.face == ESymbolFace.SCRATCH) {
                     this.icon.node.layer = this.layer
                     const animNameAction = this.getNameAction();

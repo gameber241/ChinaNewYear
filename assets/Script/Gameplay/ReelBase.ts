@@ -7,7 +7,8 @@ import {
     tween,
     instantiate,
     Node,
-    sp
+    sp,
+    Layers
 } from 'cc';
 
 import { Symbol } from './Symbol';
@@ -104,9 +105,13 @@ export abstract class ReelBase extends Component {
     }
 
     startRoll() {
+
         this.isRolling = true;
         this.collectSymbols();
         this.rearrangeSymbols();
+        this.symbols.forEach(e => {
+            e.icon.node.layer = Layers.Enum.DEFAULT
+        })  
         tween(this.node)
             .call(() => {
                 if (this.isRolling === false) return;

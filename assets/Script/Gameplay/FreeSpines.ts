@@ -1,4 +1,5 @@
 import { _decorator, Component, Input, Label, Node, sp, tween, Tween } from 'cc';
+import { GameManager } from './GameManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('FreeSpines')
@@ -13,8 +14,6 @@ export class FreeSpines extends Component {
     @property(Label)
     totalLb: Label = null
 
-    @property(Label)
-    lbFreeSpin: Label = null
 
     @property(Node)
     listSelects: Node[] = []
@@ -48,19 +47,15 @@ export class FreeSpines extends Component {
 
     ShowTotalSpin(callback, target) {
         this.resetState();
-
         this.totlSpines.node.active = true
-        this.totlSpines.setAnimation(0, "_TotalWin_Appear", false)
-        this.totlSpines.addAnimation(0, "_TotalWin_Idle", true)
+        this.totlSpines.setAnimation(0, "_TotalWin_start", false)
+        this.totlSpines.addAnimation(0, "_TotalWin_loop", true)
 
         this.playTo(target, 3, this.totalLb, callback)
         this.totlSpines.setCompleteListener((tracking) => {
             if (tracking.animation.name != "_TotalWin_Idle") return
             this.totlSpines.setCompleteListener(null)
 
-            // this.scheduleOnce(() => {
-            //     callback?.()
-            // }, 2)
         });
     }
 
@@ -148,9 +143,6 @@ export class FreeSpines extends Component {
         this.isStopped = false;
     }
 
-    UpdateRound(round) {
-        this.lbFreeSpin.string = round
-    }
 
     playSelect(index: number, numberSpin) {
         const animName = `_Free_Select${index}`;
@@ -165,6 +157,9 @@ export class FreeSpines extends Component {
             });
 
             this.fx.node.active = false;
+            GameManager.instance.indexFree = 0
+            GameManager.instance.SetDataFreeSpin()
+            GameManager.instance.PlaySpin()
         });
     }
 
