@@ -1,0 +1,205 @@
+import { _decorator, Component, Sprite, SpriteFrame, AudioSource, AudioClip } from 'cc';
+const { ccclass, property } = _decorator;
+
+@ccclass('SoundToggle')
+export class Sound extends Component {
+    public static instance: Sound
+    @property(Sprite)
+    icon: Sprite = null;
+
+    @property([SpriteFrame])
+    icons: SpriteFrame[] = []; // [0] = ON , [1] = OFF
+
+    @property(AudioSource)
+    bgMusic: AudioSource = null;
+
+    @property(AudioSource)
+    bigwin: AudioSource = null;
+
+    @property(AudioSource)
+    totalWIn: AudioSource = null;
+
+    private isSound: boolean = true;
+
+    @property(AudioClip)
+    spin: AudioClip = null
+
+    @property(AudioClip)
+    button: AudioClip = null
+
+    @property(AudioClip)
+    scratchIdle: AudioClip = null
+
+
+    @property(AudioClip)
+    bgMusicNormal: AudioClip = null
+
+
+    @property(AudioClip)
+    bgMusicFreeWin: AudioClip = null
+
+    @property(AudioClip)
+    rollScratch: AudioClip = null
+
+
+    @property(AudioClip)
+    symbolDrop: AudioClip = null
+
+
+    @property(AudioClip)
+    symBolWin: AudioClip = null
+
+    @property(AudioClip)
+    changeSymbol: AudioClip = null
+
+    @property(AudioClip)
+    BustCoin: AudioClip = null
+
+    @property(AudioClip)
+    bop: AudioClip = null
+
+    @property(AudioClip)
+    phaoHoa: AudioClip = null
+
+    @property(AudioClip)
+    showCombo: AudioClip = null
+
+    @property(AudioClip)
+    turbo1: AudioClip = null
+
+    @property(AudioClip)
+    turbo2: AudioClip = null
+
+
+    protected onLoad(): void {
+        Sound.instance = this
+    }
+    start() {
+        // Lấy trạng thái đã lưu
+        this.updateState();
+        this.PlayOneShot(this.phaoHoa)
+        this.playNormal()
+    }
+
+    btnClick() {
+        this.isSound = !this.isSound;
+        this.updateState();
+    }
+
+    private updateState() {
+
+        // Đổi icon
+        this.icon.spriteFrame = this.isSound ? this.icons[0] : this.icons[1];
+
+        // Bật / tắt nhạc
+        if (this.bgMusic) {
+            if (this.isSound) {
+                if (!this.bgMusic.playing) {
+                    this.bgMusic.play();
+                }
+            } else {
+                this.bgMusic.stop();
+            }
+        }
+    }
+
+
+    playBgMusic(audioClip) {
+        if (this.isSound == false) return
+        this.bgMusic.stop()
+        this.bgMusic.clip = audioClip
+        this.bgMusic.loop = true
+        this.bgMusic.play()
+    }
+
+    public PlayOneShot(audioClip) {
+        if (this.isSound == false) return
+
+        this.bgMusic.playOneShot(audioClip, 1)
+    }
+
+
+
+    public PlaySpin() {
+        this.PlayOneShot(this.spin)
+    }
+
+    PlayButton() {
+        this.PlayOneShot(this.button)
+
+    }
+
+    PlayScatchIdle() {
+        this.PlayOneShot(this.scratchIdle)
+    }
+
+    PlayRollScatch() {
+        this.PlayOneShot(this.rollScratch)
+    }
+
+    PlayShowCombo() {
+        this.PlayOneShot(this.showCombo)
+    }
+
+    playNormal() {
+        this.playBgMusic(this.bgMusicNormal)
+
+    }
+
+    playFreewin() {
+        this.playBgMusic(this.bgMusicFreeWin)
+
+    }
+
+    PlaySymbolDrop() {
+        this.PlayOneShot(this.symbolDrop)
+    }
+
+    PlayChangeSymbol() {
+        this.PlayOneShot(this.changeSymbol)
+    }
+
+
+    PlaySymbolWin() {
+        this.PlayOneShot(this.symBolWin)
+    }
+
+    playBigWin() {
+        this.bigwin.play()
+    }
+
+    stopBigwin() {
+        this.bigwin.stop()
+
+    }
+
+
+    playTotalWin() {
+        this.totalWIn.play()
+
+    }
+
+    stopTotalWIn() {
+        this.totalWIn.stop()
+
+    }
+
+    PlayBustCoin() {
+        this.PlayOneShot(this.BustCoin)
+    }
+
+    PlayRoll() {
+        this.PlayOneShot(this.bop)
+
+    }
+
+    PlayTurbo1() {
+        this.PlayOneShot(this.turbo1)
+
+    }
+
+    PlayTurbo2() {
+        this.PlayOneShot(this.turbo2)
+
+    }
+}

@@ -4,6 +4,7 @@ import { SymbolFrameState } from '../Enum/ESymbolFrameState';
 import { SymbolCell } from './SymbolCell';
 import { ReelBase } from './ReelBase';
 import { GameManager } from './GameManager';
+import { Sound } from '../Sound';
 
 const { ccclass, property } = _decorator;
 export enum MoveType {
@@ -244,6 +245,9 @@ export class Symbol extends Component {
             .to(0.08, { position: basePos }, { easing: 'sineIn' })
             .call(() => {
                 if (this.face == ESymbolFace.SCRATCH) {
+                    if (GameManager.instance.turboMode == 0) {
+                        Sound.instance.PlayScatchIdle()
+                    }
                     this.icon.node.layer = this.layer
                     const animNameAction = this.getNameAction();
                     const animNameIdle = this.getNameIdle()

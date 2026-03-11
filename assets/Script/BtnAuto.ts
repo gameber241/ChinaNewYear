@@ -3,6 +3,12 @@ const { ccclass, property } = _decorator;
 
 @ccclass('BtnAuto')
 export class BtnAuto extends Component {
+    public static instance: BtnAuto = null
+
+    onLoad() {
+        BtnAuto.instance = this
+    }
+
     @property(Sprite)
     icon: Sprite = null
 
@@ -27,6 +33,13 @@ export class BtnAuto extends Component {
             this.uiAuto.active = false
             this.isAuto = false
         }
+    }
+
+
+    off() {
+        this.icon.spriteFrame = this.iconAutos[0]
+        this.uiAuto.active = false
+        this.isAuto = false
     }
 }
 

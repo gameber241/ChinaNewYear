@@ -34,6 +34,8 @@ export class FreeSpines extends Component {
 
     playAnimation(callback) {
         this.fx.node.active = true
+        this.node.children[0].active = true
+
         this.fx.setCompleteListener((tracking) => {
             if (tracking.animation.name != "_Free_Start") return
             this.listSelects.forEach(e => {
@@ -48,6 +50,8 @@ export class FreeSpines extends Component {
     ShowTotalSpin(callback, target) {
         this.resetState();
         this.totlSpines.node.active = true
+        this.node.children[0].active = true
+
         this.totlSpines.setAnimation(0, "_TotalWin_start", false)
         this.totlSpines.addAnimation(0, "_TotalWin_loop", true)
 
@@ -120,6 +124,8 @@ export class FreeSpines extends Component {
         // delay hide giống slot
         this.scheduleOnce(() => {
             this.totlSpines.node.active = false; callback?.();
+            this.node.children[0].active = false
+
         }, 2);
     }
 
@@ -157,6 +163,8 @@ export class FreeSpines extends Component {
             });
 
             this.fx.node.active = false;
+            this.node.children[0].active = false
+
             GameManager.instance.indexFree = 0
             GameManager.instance.SetDataFreeSpin()
             GameManager.instance.PlaySpin()

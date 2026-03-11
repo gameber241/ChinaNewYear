@@ -25,7 +25,7 @@ export class LoadingScene extends Component {
 
     preloadGameScene() {
 
-        director.preloadScene("GamePlay",
+        director.preloadScene("Gameplay",
             (completed, total) => {
 
                 this.targetProgress = completed / total;
@@ -67,6 +67,6 @@ export class LoadingScene extends Component {
     }
 
     onClickStart() {
-        director.loadScene("GamePlay");
+        director.loadScene("Gameplay");
     }
 }

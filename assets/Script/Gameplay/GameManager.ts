@@ -1,5 +1,5 @@
 
-import { _decorator, Component, Label, Node, tween, UIOpacity, Vec3, instantiate, sp, randomRangeInt } from 'cc';
+import { _decorator, Component, Label, Node, tween, UIOpacity, Vec3, instantiate, sp, randomRangeInt, Button, Tween } from 'cc';
 import { ReelBase } from './ReelBase';
 import { ESymbolFace } from '../Enum/ESymbolFace';
 import { Symbol } from './Symbol';
@@ -9,6 +9,9 @@ import { ComboManager } from './ComboManager';
 import { BtSpines } from './BtSpines';
 import { Total } from './Total';
 import { exampleScatch1, exampleScatch2, exampleScatch3, sampleJson, sampleJson1, sampleJson2 } from './DataExample';
+import { BtnMinus } from './BtnMinus';
+import { BtnPlus } from './BtnPlus';
+import { Sound } from '../Sound';
 
 const { ccclass, property } = _decorator;
 
@@ -29,13 +32,17 @@ export class GameManager extends Component {
     @property(Label)
     totalFree: Label = null
 
+    @property(Node)
+    btns: Node[] = []
+
+    @property(Label)
+    totalBetslb: Label = null
 
     // @property(AutoCtrl) UiAuto: AutoCtrl = null!;
 
 
     public static instance: GameManager = null;
 
-    isTurbo = false;
     isFree = false;
     isShowSetting = false;
     isShowFooter = false;
@@ -49,14 +56,18 @@ export class GameManager extends Component {
     symBolArray: Symbol[][] = [];
 
     indexCurrentReel = 0;
-    turboMode: boolean = false
+    turboMode: number = 0
 
     onLoad() { GameManager.instance = this; }
+
+
+
 
     protected start() {
         Total.instance.SetTextNormal()
         this.initGrid();
         this.SetDataExample()
+        this.totalBetslb.string = this.totalBets.toString()
 
     }
 
@@ -74,6 +85,7 @@ export class GameManager extends Component {
 
     PlaySpin() {
         BtSpines.intance.isSpin = true
+        this.Disabledbtns()
         const round = this.dataExample.rounds[this.indexCurrentReel];
         round.isScratch
             ? (this.SetFreeSpines(), this.PlayFreeSpin(round.freeSpin))
@@ -105,14 +117,14 @@ export class GameManager extends Component {
             let current = i;
             this.reels[current].startRoll();
         }
-        await GameManager.waitForSeconds(1);
+        await GameManager.waitForSeconds(this.GetTimeTurboScratchStart());
 
 
         let stopped = 0;
         const phase1 = indexReel + 1;
         for (let i = 0; i <= indexReel; i++) {
             this.reels[i].stopRoll(grid[i])
-            await GameManager.waitForSeconds(0.2);
+            await GameManager.waitForSeconds(this.GetTimeTurboScratchStart());
 
             if (++stopped !== phase1) continue;
             this.stopPhase2(indexReel, grid);
@@ -145,7 +157,7 @@ export class GameManager extends Component {
             });
 
             // đợi 4s
-            await GameManager.waitForSeconds(4);
+            await GameManager.waitForSeconds(this.GetTimeTurboScratchSpin());
 
             // stop reel
             reel.stopRoll(grid[current]);
@@ -185,11 +197,11 @@ export class GameManager extends Component {
             let current = i;
             this.reels[current].startRoll();
         }
-        await GameManager.waitForSeconds(this.turboMode ? 0.25 : 0.75);
+        await GameManager.waitForSeconds(this.GetTimeTurboStarSpin());
         for (let i = 0; i < this.reels.length; i++) {
             let current = i;
             this.reels[current].stopRoll(grid[i]);
-            await GameManager.waitForSeconds(this.turboMode ? 0 : 0.3);
+            await GameManager.waitForSeconds(this.GetTimeTurboStopSpin());
         }
         await GameManager.waitForSeconds(0.5);
         this.ClearData()
@@ -279,9 +291,17 @@ export class GameManager extends Component {
                 this.PlaySpin();
             }
             else {
-                BtSpines.intance.isSpin = false;
+
                 this.SetNormal();
                 ComboManager.instantiate.SetDefualt()
+
+                if (BtSpines.intance.isAuto == true) {
+                    BtSpines.intance.AutoSpin()
+                }
+                else {
+                    BtSpines.intance.isSpin = false;
+                    this.EnabledBtns()
+                }
             }
 
         };
@@ -457,10 +477,92 @@ export class GameManager extends Component {
     }
 
     SetDataExample() {
-        let x = [sampleJson2, sampleJson1]
+        let x = [sampleJson1, sampleJson2]
 
-        // this.dataExample = x[randomRangeInt(0, 3)]
+        // this.dataExample = x[randomRangeInt(0, 2)]
         this.dataExample = sampleJson2
+
+    }
+
+    Disabledbtns() {
+        this.btns.forEach(e => {
+            e.getComponent(Button).enabled = false
+        })
+    }
+
+
+    EnabledBtns() {
+        this.btns.forEach(e => {
+            e.getComponent(Button).enabled = true
+        })
+    }
+
+    totalBets = 2000
+
+    BtnMinus() {
+        if (this.totalBets > 2000) {
+            this.totalBets -= 2000
+            this.totalBetslb.string = this.totalBets.toString()
+            this.EffectTotalBet()
+        }
+
+    }
+
+    BtnPlus() {
+        if (this.totalBets < 10000) {
+            this.totalBets += 2000
+            this.totalBetslb.string = this.totalBets.toString()
+            this.EffectTotalBet()
+        }
+    }
+
+    EffectTotalBet() {
+        Tween.stopAllByTarget(this.totalBetslb.node)
+        tween(this.totalBetslb.node).to(0.3, { scale: new Vec3(1.2, 1.2, 1.2) })
+            .delay(0.5)
+            .to(0.3, { scale: new Vec3(1, 1, 1) })
+            .start()
+    }
+
+
+    GetTimeTurboStarSpin() {
+        if (this.turboMode == 0) return 0.75
+        if (this.turboMode == 1) return 0.25
+        if (this.turboMode == 2) return 0
+    }
+
+    GetTimeTurboScratchStart() {
+        if (this.turboMode == 0) return 0.75
+        if (this.turboMode == 1) return 0
+        if (this.turboMode == 2) return 0
+    }
+
+    GetTimeTurboStopSpin() {
+        if (this.turboMode == 0) return 0.3
+        if (this.turboMode == 1) {
+            Sound.instance.PlayScatchIdle()
+            return 0
+        }
+        if (this.turboMode == 2) {
+            Sound.instance.PlayScatchIdle()
+            return 0
+        }
+    }
+
+
+    GetTimeTurboScratchSpin() {
+        if (this.turboMode == 0) {
+            Sound.instance.PlayRollScatch()
+            return 4
+        }
+        if (this.turboMode == 1) {
+
+            return 0
+        }
+        if (this.turboMode == 2) {
+
+            return 0
+        }
 
     }
 }

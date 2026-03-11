@@ -1,4 +1,6 @@
 import { _decorator, Component, Node } from 'cc';
+import { BtSpines } from './Gameplay/BtSpines';
+import { BtnAuto } from './BtnAuto';
 const { ccclass, property } = _decorator;
 
 @ccclass('UIAuto')
@@ -31,7 +33,9 @@ export class UIAuto extends Component {
 
 
     BtnSelectNumberAuto(target, args) {
-
+        this.node.active = false
+        BtSpines.intance.ShowAuto(args)
+        BtnAuto.instance.off()
     }
 }
 

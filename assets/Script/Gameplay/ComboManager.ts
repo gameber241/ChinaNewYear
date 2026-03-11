@@ -1,5 +1,6 @@
 import { _decorator, Component, Label, Node, sp, instantiate, tween, Vec3 } from 'cc';
 import { Total } from './Total';
+import { Sound } from '../Sound';
 const { ccclass, property } = _decorator;
 
 @ccclass('ComboManager')
@@ -65,6 +66,7 @@ export class ComboManager extends Component {
         this.comboSkeleton.setCompleteListener((tracking) => {
             if (tracking.animation.name != "Ball_action") return
             this.showAllCombo()
+            Sound.instance.PlayShowCombo()
 
         });
     }
