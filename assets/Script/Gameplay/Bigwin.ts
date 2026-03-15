@@ -1,4 +1,5 @@
 import { _decorator, Component, Input, Label, Node, sp, Tween, tween } from 'cc';
+import { Sound } from '../Sound';
 const { ccclass, property } = _decorator;
 
 enum WinType {
@@ -119,7 +120,7 @@ export class BigWin extends Component {
         fx.setAnimation(0, startAnim, false);
         fx.addAnimation(0, loopAnim, true);
 
-        this.playTo(value, 3, fx, label, endAnim, callback);
+        this.playTo(value, 6, fx, label, endAnim, callback);
     }
 
     // ================================
@@ -194,7 +195,7 @@ export class BigWin extends Component {
             this.node.off(Input.EventType.TOUCH_END, this.touchHandler, this);
             this.touchHandler = null;
         }
-
+        Sound.instance.playBgLastBigWin()
         this.scheduleOnce(() => {
             this.mask.active = false
             fx.setAnimation(0, endAnim, false);

@@ -17,30 +17,25 @@ export class LoadingScene extends Component {
 
     onLoad() {
         this.barWidth = this.loadingBar.getComponent(UITransform)!.width;
-
         this.loadingBar.fillRange = 0;
-
         this.preloadGameScene();
     }
 
     preloadGameScene() {
-
         director.preloadScene("Gameplay",
             (completed, total) => {
-
                 this.targetProgress = completed / total;
-
             },
             () => {
-
                 this.targetProgress = 1;
+                director.loadScene("Gameplay");
 
             }
         );
+
     }
 
     update(dt: number) {
-
         // làm mượt progress
         this.currentProgress += (this.targetProgress - this.currentProgress) * 0.1;
 
@@ -67,6 +62,5 @@ export class LoadingScene extends Component {
     }
 
     onClickStart() {
-        director.loadScene("Gameplay");
     }
 }

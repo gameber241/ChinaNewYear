@@ -85,8 +85,11 @@ export class GameManager extends Component {
 
     PlaySpin() {
         BtSpines.intance.isSpin = true
+        Total.instance.SetTextNormal()
+
         this.Disabledbtns()
         const round = this.dataExample.rounds[this.indexCurrentReel];
+        console.log(round)
         round.isScratch
             ? (this.SetFreeSpines(), this.PlayFreeSpin(round.freeSpin))
             : this.SetNormal();
@@ -234,7 +237,12 @@ export class GameManager extends Component {
         for (const e of r.win.positions) {
             this.symBolArray[e.c][e.r].Dispose();
         }
-        console.log(this.dataExample.rounds[this.indexCurrentReel])
+        if (r.win.positions.length > 0) {
+            this.indexCombo++
+            Sound.instance.PlayCombo(this.indexCombo)
+        }
+
+        Sound.instance.PlaySymbolWin()
         ComboManager.instantiate.SetCombo(this.dataExample.rounds[this.indexCurrentReel].comboNext, this.dataExample.rounds[this.indexCurrentReel].total)
 
         await GameManager.waitForSeconds(1.1);
@@ -247,6 +255,7 @@ export class GameManager extends Component {
 
         await GameManager.waitForSeconds(1);
         if (r.hasNext) {
+
             this.indexCurrentReel++;
             await this.ClearData(); // ⭐ cực quan trọng
         }
@@ -291,16 +300,22 @@ export class GameManager extends Component {
                 this.PlaySpin();
             }
             else {
-
                 this.SetNormal();
                 ComboManager.instantiate.SetDefualt()
-
+                this.SetDataExample()
+                this.indexCombo = -1
+                if (Sound.instance.isplayBigWin == true) {
+                    Sound.instance.playBgMusic(Sound.instance.bgMusicNormal)
+                    Sound.instance.isplayBigWin = false
+                }
                 if (BtSpines.intance.isAuto == true) {
                     BtSpines.intance.AutoSpin()
                 }
                 else {
                     BtSpines.intance.isSpin = false;
                     this.EnabledBtns()
+                    this.indexCombo = -1
+
                 }
             }
 
@@ -309,26 +324,38 @@ export class GameManager extends Component {
         const winQueue: Array<() => void> = [];
 
         if (r.BigWin) {
+
             winQueue.push(() => {
+                Sound.instance.playSoundBigWin()
+                Sound.instance.playBgBigWin()
                 BigWin.instance.showBigWin(runNext, r.BigWin);
             });
         }
 
         if (r.SuperWin) {
+
             winQueue.push(() => {
+                Sound.instance.playBgBigWin()
+                Sound.instance.playSoundSuperWin()
                 BigWin.instance.showSuperWin(runNext, r.SuperWin);
             });
         }
 
         if (r.MegaWin) {
+
             winQueue.push(() => {
+                Sound.instance.playBgBigWin()
+                Sound.instance.playSoundMegaWin()
                 BigWin.instance.showMegaWin(runNext, r.MegaWin);
             });
         }
 
         // total win
         if (r.totalPrice > 0 && r.isScratch) {
+
+
             winQueue.push(() => {
+                Sound.instance.playTotal()
                 FreeSpines.instance.ShowTotalSpin(() => {
                     runNext();
                 }, 4000);
@@ -467,6 +494,7 @@ export class GameManager extends Component {
     }
 
     indexFree = 0
+    indexCombo = -1
     SetDataFreeSpin() {
         let x = [sampleJson, sampleJson1, sampleJson2]
         if (this.indexFree == 0) this.dataExample = exampleScatch1
@@ -480,7 +508,7 @@ export class GameManager extends Component {
         let x = [sampleJson1, sampleJson2]
 
         // this.dataExample = x[randomRangeInt(0, 2)]
-        this.dataExample = sampleJson2
+        this.dataExample = sampleJson1
 
     }
 
@@ -532,7 +560,7 @@ export class GameManager extends Component {
     }
 
     GetTimeTurboScratchStart() {
-        if (this.turboMode == 0) return 0.75
+        if (this.turboMode == 0) return 0.2
         if (this.turboMode == 1) return 0
         if (this.turboMode == 2) return 0
     }
@@ -556,11 +584,9 @@ export class GameManager extends Component {
             return 4
         }
         if (this.turboMode == 1) {
-
             return 0
         }
         if (this.turboMode == 2) {
-
             return 0
         }
 

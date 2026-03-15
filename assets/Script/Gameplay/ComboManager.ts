@@ -60,6 +60,9 @@ export class ComboManager extends Component {
 
 
     playAnimation(total?) {
+        if (total == null) {
+            Sound.instance.PlaySoundQuayVong()
+        }
         this.hideAllCombo()
         this.comboSkeleton.setAnimation(0, "Ball_action", false)
         this.comboSkeleton.addAnimation(0, "Ball_idle", true)

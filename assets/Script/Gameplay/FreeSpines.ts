@@ -1,5 +1,7 @@
-import { _decorator, Component, Input, Label, Node, sp, tween, Tween } from 'cc';
+import { _decorator, Component, Input, Label, Node, sp, tween, Tween, instantiate } from 'cc';
 import { GameManager } from './GameManager';
+import { Sound } from '../Sound';
+import { ComboManager } from './ComboManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('FreeSpines')
@@ -33,6 +35,8 @@ export class FreeSpines extends Component {
     private isStopped: boolean = false;
 
     playAnimation(callback) {
+        Sound.instance.PlayOneShot(Sound.instance.phaoHoa)
+        Sound.instance.playFreewin()
         this.fx.node.active = true
         this.node.children[0].active = true
 
@@ -151,6 +155,7 @@ export class FreeSpines extends Component {
 
 
     playSelect(index: number, numberSpin) {
+        Sound.instance.SoundSelectFreeSpies()
         const animName = `_Free_Select${index}`;
 
         this.fx.setAnimation(0, animName, false);
@@ -166,8 +171,11 @@ export class FreeSpines extends Component {
             this.node.children[0].active = false
 
             GameManager.instance.indexFree = 0
+            ComboManager.instantiate.playAnimation()
+            GameManager.waitForSeconds(0.5)
             GameManager.instance.SetDataFreeSpin()
             GameManager.instance.PlaySpin()
+            Sound.instance.playFree()
         });
     }
 

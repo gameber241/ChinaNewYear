@@ -33,7 +33,13 @@ export class Sound extends Component {
 
     @property(AudioClip)
     bgMusicNormal: AudioClip = null
+    @property(AudioClip)
+    bgMusicFree: AudioClip = null
+    @property(AudioClip)
+    bgBigWIn: AudioClip = null
 
+    @property(AudioClip)
+    lastBigWin: AudioClip = null
 
     @property(AudioClip)
     bgMusicFreeWin: AudioClip = null
@@ -44,7 +50,8 @@ export class Sound extends Component {
 
     @property(AudioClip)
     symbolDrop: AudioClip = null
-
+    @property(AudioClip)
+    bgTotal: AudioClip
 
     @property(AudioClip)
     symBolWin: AudioClip = null
@@ -70,6 +77,23 @@ export class Sound extends Component {
     @property(AudioClip)
     turbo2: AudioClip = null
 
+    @property(AudioClip)
+    selectFreeSpines: AudioClip = null
+    @property(AudioClip)
+    soundQuayVong: AudioClip = null
+
+    @property(AudioClip)
+    soundBw: AudioClip = null
+
+
+    @property(AudioClip)
+    superWin: AudioClip = null
+
+
+    @property(AudioClip)
+    megaWin: AudioClip = null
+    @property(AudioClip)
+    combos: AudioClip[] = []
 
     protected onLoad(): void {
         Sound.instance = this
@@ -112,6 +136,26 @@ export class Sound extends Component {
         this.bgMusic.play()
     }
 
+    playBgBigWin() {
+        if (this.isSound == false) return
+        console.log("den day")
+        this.bgMusic.stop()
+        this.bgMusic.clip = this.bgBigWIn
+        this.bgMusic.loop = true
+        this.bgMusic.play()
+    }
+
+    isplayBigWin = false
+    playBgLastBigWin() {
+        if (this.isSound == false) return
+        this.isplayBigWin = true
+        this.bgMusic.stop()
+        this.bgMusic.clip = this.lastBigWin
+        this.bgMusic.loop = false
+        this.bgMusic.play()
+    }
+
+
     public PlayOneShot(audioClip) {
         if (this.isSound == false) return
 
@@ -143,6 +187,21 @@ export class Sound extends Component {
 
     playNormal() {
         this.playBgMusic(this.bgMusicNormal)
+
+    }
+
+    playFree() {
+        this.playBgMusic(this.bgMusicFree)
+
+    }
+
+    playTotal() {
+        this.isplayBigWin = true
+        this.playBgMusic(this.bgTotal)
+
+    }
+    SoundSelectFreeSpies() {
+        this.PlayOneShot(this.selectFreeSpines)
 
     }
 
@@ -200,6 +259,35 @@ export class Sound extends Component {
 
     PlayTurbo2() {
         this.PlayOneShot(this.turbo2)
+    }
+
+    PlayCombo(index) {
+        this.PlayOneShot(this.combos[index])
+
+    }
+
+
+
+    PlaySoundQuayVong() {
+        this.PlayOneShot(this.soundQuayVong)
+
+    }
+
+
+
+    playSoundBigWin() {
+        this.PlayOneShot(this.soundBw)
+
+    }
+
+
+    playSoundSuperWin() {
+        this.PlayOneShot(this.superWin)
+
+    }
+
+    playSoundMegaWin() {
+        this.PlayOneShot(this.megaWin)
 
     }
 }

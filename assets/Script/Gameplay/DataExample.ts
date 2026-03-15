@@ -263,7 +263,8 @@ export const sampleJson1 = {
             },],
         copies: [],
         hasNext: true,
-        comboNext: 3
+        comboNext: 3,
+        total: 40
 
     },
     {
@@ -299,7 +300,8 @@ export const sampleJson1 = {
         flips: [],
         copies: [],
         hasNext: false,
-        comboNext: 3
+        comboNext: 3,
+        total: 40
 
     }
     ]

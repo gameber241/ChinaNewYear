@@ -14,6 +14,7 @@ import {
 import { Symbol } from './Symbol';
 import { PrefabManager } from './PrefabManager';
 import { GameManager } from './GameManager';
+import { Sound } from '../Sound';
 
 const { ccclass, property } = _decorator;
 
@@ -111,7 +112,7 @@ export abstract class ReelBase extends Component {
         this.rearrangeSymbols();
         this.symbols.forEach(e => {
             e.icon.node.layer = Layers.Enum.DEFAULT
-        })  
+        })
         tween(this.node)
             .call(() => {
                 if (this.isRolling === false) return;
@@ -171,7 +172,10 @@ export abstract class ReelBase extends Component {
         this.symbols.forEach(s => {
             s.reelIndex += visible;
             s.rollToIndex(this._delay * 5, Symbol.MoveType.STOP);
+
         });
+        Sound.instance.PlaySymbolDrop()
+
     }
 
 
@@ -184,60 +188,7 @@ export abstract class ReelBase extends Component {
 
         this.startRoll();
     }
-    // stopRoll(result: any[]) {
 
-    //     Tween.stopAllByTarget(this.node);
-
-    //     this.isRolling = false;
-
-    //     if (!result) return;
-
-    //     const visible = this.VISIBLE_COUNT;
-    //     const firstVisible = this.FIRST_VISIBLE;
-    //     const total = this.symbols.length;
-
-    //     // ⭐ set result giống code bạn
-    //     for (let i = 0; i < visible; i++) {
-
-    //         if (!result[i]) continue;
-
-    //         const symbol = this.symbols.find(
-
-    //             s => s.reelIndex === firstVisible + i - 1
-
-    //         );
-
-    //         if (!symbol) continue;
-
-    //         symbol.InitSymbol(result[i]);
-
-    //         symbol.col = this.possitionReel;
-    //         symbol.row = i;
-
-    //         GameManager.instance.symBolArray[
-    //             this.possitionReel
-    //         ][i] = symbol;
-    //     }
-    //     // ⭐ giống code 1 → luôn đi xuống
-    //     for (let i = 0; i < this.symbols.length; i++) {
-
-    //         this.symbols[i].reelIndex += 1;
-
-    //         if (this.symbols[i].reelIndex >= total) {
-
-    //             this.symbols[i].reelIndex = 0;
-
-    //             this.symbols[i].node.setPosition(
-    //                 this.getSymbolPosition(-1)
-    //             );
-    //         }
-
-    //         this.symbols[i].rollToIndex(
-    //             0.1,
-    //             Symbol.MoveType.STOP
-    //         );
-    //     }
-    // }
     /* ================= FINISH STOP ================= */
     setSymbleSiblingIndex() {
         const allSymbols: Symbol[] = [...this.symbols];
@@ -309,6 +260,7 @@ export abstract class ReelBase extends Component {
         listSymbol.forEach((s, i) => {
             s.rollToIndex(0.12, Symbol.MoveType.STOP);
         });
+        Sound.instance.PlaySymbolDrop()
     }
 
     private createNewSymbol(): Symbol {
@@ -317,8 +269,6 @@ export abstract class ReelBase extends Component {
 
         return symbol.getComponent(Symbol);
     }
-
-
     /* ================= ABSTRACT ================= */
 
     public isHorizontal(): boolean {
